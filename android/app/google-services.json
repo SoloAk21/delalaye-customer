@@ -1,0 +1,98 @@
+{
+  "project_info": {
+    "project_number": "500749420107",
+    "project_id": "delalaye-9dcd0",
+    "storage_bucket": "delalaye-9dcd0.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:500749420107:android:c1394bf3893c003c362fce",
+        "android_client_info": {
+          "package_name": "com.delalayecustomer.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "500749420107-lntktjcah9o42p2ekqtnu802s7cohago.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.delalayecustomer.app",
+            "certificate_hash": "2a26248778753770dead5bd237ca56c6279286dd"
+          }
+        },
+        {
+          "client_id": "500749420107-83nnci918kqo9ecf0dlu5ikk7fc41aco.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAn_vMreDqmvyZQNQUB69IjgJHQpenYrYI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "500749420107-83nnci918kqo9ecf0dlu5ikk7fc41aco.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "500749420107-eaqr0ibaf3ml1uvpsrev3aqmic1r3j3u.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.delalochu.app"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:500749420107:android:22095dfcd6045f61362fce",
+        "android_client_info": {
+          "package_name": "com.delalochu.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "500749420107-6of4vtvaqh47flr70s9u5la2kgfv0ah5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.delalochu.app",
+            "certificate_hash": "2a26248778753770dead5bd237ca56c6279286dd"
+          }
+        },
+        {
+          "client_id": "500749420107-83nnci918kqo9ecf0dlu5ikk7fc41aco.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAn_vMreDqmvyZQNQUB69IjgJHQpenYrYI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "500749420107-83nnci918kqo9ecf0dlu5ikk7fc41aco.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "500749420107-eaqr0ibaf3ml1uvpsrev3aqmic1r3j3u.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.delalochu.app"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
