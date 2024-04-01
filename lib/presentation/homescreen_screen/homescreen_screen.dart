@@ -1,4 +1,5 @@
 import 'package:delalochu/core/app_export.dart';
+import 'package:delalochu/localization/lang_provider.dart';
 import 'package:delalochu/widgets/app_bar/custom_app_bar.dart';
 import 'package:delalochu/presentation/map_view/place_picker.dart';
 import 'package:flutter/material.dart';
@@ -43,6 +44,8 @@ class HomescreenScreenState extends State<HomescreenScreen> {
 
   /// drawer widget
   Drawer drawer() {
+    var languageProvider =
+        Provider.of<LanguageProvider>(context, listen: false);
     return Drawer(
       child: SingleChildScrollView(
         child: Container(
@@ -65,7 +68,7 @@ class HomescreenScreenState extends State<HomescreenScreen> {
                       "lbl_menu".tr,
                       style: TextStyle(
                         color: appTheme.gray500,
-                        fontSize: 20.fSize,
+                        fontSize: 18.fSize,
                         fontFamily: 'Poppins',
                         fontWeight: FontWeight.w500,
                       ),
@@ -83,7 +86,7 @@ class HomescreenScreenState extends State<HomescreenScreen> {
                 ],
               ),
               const SizedBox(height: 46),
-              for (int i = 0; i < 5; i++) ...[
+              for (int i = 0; i < 6; i++) ...[
                 GestureDetector(
                   onTap: () {
                     switch (i) {
@@ -106,6 +109,55 @@ class HomescreenScreenState extends State<HomescreenScreen> {
                         _closeDrawer();
                         break;
                       case 4:
+                        showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return SimpleDialog(
+                                  title: Text('lbl_select_language'.tr),
+                                  children: <Widget>[
+                                    SimpleDialogOption(
+                                      onPressed: () {
+                                        setState(() {
+                                          Locale newLocale = Locale("en", '');
+                                          languageProvider
+                                              .changeLanguage(newLocale);
+                                        });
+                                        Navigator.pop(context);
+                                        NavigatorService.pushNamed(AppRoutes.splashscreenScreen);
+                                      },
+                                      child: Text('English'),
+                                    ),
+                                    SimpleDialogOption(
+                                      onPressed: () {
+                                        setState(() {
+                                          Locale newLocale = Locale("am", '');
+                                        languageProvider
+                                            .changeLanguage(newLocale);
+                                        });
+                                        Navigator.pop(context);
+                                        NavigatorService.pushNamed(AppRoutes.splashscreenScreen);
+
+                                      },
+                                      child: Text('Amharic'),
+                                    ),
+                                    SimpleDialogOption(
+                                      onPressed: () {
+                                        setState(() {
+                                          Locale newLocale = Locale("da", '');
+                                          languageProvider
+                                              .changeLanguage(newLocale);
+                                        });
+                                        Navigator.pop(context);
+                                        NavigatorService.pushNamed(AppRoutes.splashscreenScreen);
+
+                                      },
+                                      child: Text('Afaan Oromoo'),
+                                    ),
+                                  ]);
+                            });
+                        _closeDrawer();
+                        break;
+                      case 5:
                         _closeDrawer();
                         PrefUtils.sharedPreferences!
                             .setBool('isLoggedIn', false);
@@ -120,7 +172,7 @@ class HomescreenScreenState extends State<HomescreenScreen> {
                     children: [
                       Icon(
                         iconList[i],
-                        color: i == 4 ? Colors.red : Color(0xFFFFA05B),
+                        color: i == 5 ? Colors.red : Color(0xFFFFA05B),
                       ),
                       Padding(
                         padding: const EdgeInsets.only(left: 20.0),
@@ -128,8 +180,8 @@ class HomescreenScreenState extends State<HomescreenScreen> {
                           titleList[i],
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: i == 4 ? Colors.red : Colors.black,
-                            fontSize: 18,
+                            color: i == 5 ? Colors.red : Colors.black,
+                            fontSize: 13,
                             fontFamily: 'Poppins',
                             fontWeight: FontWeight.w400,
                             height: 0,
@@ -195,23 +247,24 @@ class HomescreenScreenState extends State<HomescreenScreen> {
     );
   }
 
-  static var titleList = [
-    'Home',
-    'Profile',
-    'History',
-    'Rate App',
-    'Logout',
+   var titleList = [
+    'lbl_home'.tr,
+    'lbl_profile'.tr,
+    'lbl_history'.tr,
+    'lbl_rate_app'.tr,
+    'lbl_language'.tr,
+    'lbl_logout'.tr,
   ];
   var listofImageName = [
-    'House sale',
-    'House rent',
-    'Car sale',
-    'Car rent',
-    'Real Estate',
-    'House maid',
-    'Skilled worker',
-    'Used items',
-    'Others',
+    'lbl_house_sale'.tr,
+    'lbl_house_rent'.tr,
+    'lbl_car_sale'.tr,
+    'lbl_car_rent'.tr,
+    'lbl_real_state'.tr,
+    'lbl_house_maid'.tr,
+    'lbl_skilled_worker'.tr,
+    'lbl_used_items'.tr,
+    // 'lbl_others'.tr,
   ];
   static var listOfImage = [
     ImageConstant.housesale,
@@ -222,13 +275,14 @@ class HomescreenScreenState extends State<HomescreenScreen> {
     ImageConstant.maid,
     ImageConstant.mechanic,
     ImageConstant.furniture,
-    ImageConstant.more,
+    // ImageConstant.more,
   ];
   static var iconList = [
     Icons.home,
     Icons.person,
     Icons.history,
     Icons.star,
+    Icons.language,
     Icons.logout,
   ];
   static void openDrawer() {
@@ -289,7 +343,7 @@ class HomescreenScreenState extends State<HomescreenScreen> {
                     ),
                     child: Center(
                       child: CustomImageView(
-                        margin: EdgeInsets.only(top: index == 8 ? 30 : 1),
+                        margin: EdgeInsets.only(top:1),
                         imagePath: listOfImage[index],
                         color: Color(0xFFFFA05B),
                         // height: 64.v,
@@ -315,5 +369,54 @@ class HomescreenScreenState extends State<HomescreenScreen> {
         },
       ),
     );
+  }
+}
+
+class Showdialog extends StatefulWidget {
+  @override
+  State<Showdialog> createState() => _ShowdialogState();
+}
+
+class _ShowdialogState extends State<Showdialog> {
+  @override
+  Widget build(BuildContext context) {
+    var languageProvider =
+        Provider.of<LanguageProvider>(context, listen: false);
+    return SimpleDialog(
+        title: Text('lbl_select_language'.tr),
+        children: <Widget>[
+          SimpleDialogOption(
+            onPressed: () {
+              setState(() {
+                Locale newLocale = Locale("en", '');
+                languageProvider.changeLanguage(newLocale);
+              });
+              NavigatorService.pushNamed(AppRoutes.homescreenScreens);
+            },
+            child: Text('English'),
+          ),
+          SimpleDialogOption(
+            onPressed: () {
+              Locale newLocale = Locale("am", '');
+              languageProvider.changeLanguage(newLocale);
+              setState(() {});
+              Navigator.pop(context);
+            },
+            child: Text('Amharic'),
+          ),
+          SimpleDialogOption(
+            onPressed: () {
+              setState(() {
+                Locale newLocale = Locale("da", '');
+                languageProvider.changeLanguage(newLocale);
+              });
+              // Perform action when Afaan Oromo is selected
+              // Navigator.pop(context, 'Afaan Oromoo');
+              Navigator.pop(context);
+              // NavigatorService.pushNamed(AppRoutes.homescreenScreens);
+            },
+            child: Text('Afaan Oromoo'),
+          ),
+        ]);
   }
 }

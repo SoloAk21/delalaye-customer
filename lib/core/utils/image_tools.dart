@@ -13,7 +13,10 @@ class ImageTools {
     List<int> imageBytes = images.readAsBytesSync();
     return base64Encode(imageBytes);
   }
-
+// Function to decode base64 string to Uint8List
+  static Uint8List decodeBase64ToUint8List(String base64String) {
+    return base64.decode(base64String);
+  }
   /// cache avatar for the chat
   static CachedNetworkImage getCachedAvatar(String avatarUrl) {
     return CachedNetworkImage(
@@ -49,10 +52,10 @@ class ImageTools {
   }
 
   static Future<file.File> writeToFile(Uint8List? data,
-      {String? fileName}) async {
+      {String? fileName, String? fileExtension}) async {
     final tempDir = await getTemporaryDirectory();
     final tempPath = tempDir.path;
-    var filePath = '$tempPath/${fileName ?? 'file_01'}.jpeg';
+    var filePath = '$tempPath/${fileName ?? 'file_01'}.$fileExtension';
     var f = file.File(filePath);
     if (data != null) {
       await f.writeAsBytes(data);

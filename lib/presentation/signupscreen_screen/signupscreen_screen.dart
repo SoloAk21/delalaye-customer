@@ -381,7 +381,7 @@ class SignupscreenScreenState extends State<SignupscreenScreen> {
             onChanged: (p0) => userName = p0,
             validator: (value) {
               if (value == '') {
-                return "please enter your user name";
+                return "lbl_please_enter_user_name".tr;
               }
               return null;
             },

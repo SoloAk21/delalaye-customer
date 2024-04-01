@@ -3,12 +3,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' show Random;
 
-import 'package:delalochu/core/utils/image_constant.dart';
+import 'package:delalochu/core/app_export.dart';
 import 'package:delalochu/core/utils/progress_dialog_utils.dart';
-import 'package:delalochu/core/utils/size_utils.dart';
 import 'package:delalochu/domain/apiauthhelpers/apiauth.dart';
 import 'package:delalochu/presentation/map_view/model/broker_request_model.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -16,13 +16,10 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:inspireui/extensions/string_extension.dart';
 import 'package:location/location.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../core/utils/pref_utils.dart';
 import '../callToBroker_Page/call_to_broker_sreen.dart';
-import '../../theme/app_decoration.dart';
-import '../../theme/theme_helper.dart';
 import '../../widgets/custom_dialog.dart';
-import '../../widgets/custom_image_view.dart';
 import 'model/broker_info_model.dart';
 import 'model/check_request_usingConnection.dart';
 
@@ -43,7 +40,6 @@ class Uuid {
   String generateV4() {
     // Generate xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx / 8-4-4-4-12.
     var special = 8 + _random.nextInt(4);
-
     return '${_bitsDigits(16, 4)}${_bitsDigits(16, 4)}-'
         '${_bitsDigits(16, 4)}-'
         '4${_bitsDigits(12, 3)}-'
@@ -186,16 +182,17 @@ class PlacePickerState extends State<PlacePicker> {
   bool isConnectiong = false;
 
   List<String> cancelreason = [
-    'Broker too far',
-    'Changed my mind',
-    'Just trying the app',
-    'Long waiting time',
-    'Others'
+    'lbl_broker_too_far'.tr,
+    'lbl_changed_my_mind'.tr,
+    'lbl_just_trying_app'.tr,
+    'lbl_long_waiting_time'.tr,
+    'lbl_others'.tr
   ];
 
   bool isLoading = false;
 
   String fullname = '';
+  dynamic rate;
   String phoneNumber = '';
 
   bool hasCar = false;
@@ -208,6 +205,7 @@ class PlacePickerState extends State<PlacePicker> {
   int? connectionId;
 
   String? locationLongtude = '';
+  //late SharedPreferences prefs;
 
   late StreamController<CheckForCustomerRequestModel> _requestStreamController;
   late Timer _timer;
@@ -215,27 +213,27 @@ class PlacePickerState extends State<PlacePicker> {
   // constructor
   PlacePickerState();
 
-  void onMapCreated(GoogleMapController controller) {
+  Future<void> onMapCreated(GoogleMapController controller) async {
+    // prefs = await SharedPreferences.getInstance();
     mapController.complete(controller);
     moveToCurrentUserLocation();
   }
 
   Future<LocationData> getCurrentLocation() async {
     Location location = Location();
+    // prefs = await SharedPreferences.getInstance();
     return await location.getLocation();
   }
 
   Future<void> _fetchUserRequests() async {
+    //prefs = await SharedPreferences.getInstance();
     try {
-      print('=================================> _fetchUserRequests() called');
-      print('============connectionId=====================> $connectionId');
-      print('=================================> _fetchUserRequests() called');
       var token = PrefUtils.sharedPreferences!.getString('token') ?? '';
       var headers = {'x-auth-token': token};
       var request = http.Request(
           'GET',
           Uri.parse(
-              'https://api.delalaye.com/api/users/request/$connectionId'));
+              'https://dev-api.delalaye.com/api/users/request/$connectionId'));
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
       if (response.statusCode == 200) {
@@ -249,6 +247,7 @@ class PlacePickerState extends State<PlacePicker> {
             _timer.cancel();
             setState(() {
               isConnectiong = false;
+              PrefUtils.sharedPreferences!.setBool('isConnectiong', false);
               isBrokerSelected = false;
             });
             ProgressDialogUtils.showSnackBar(
@@ -271,17 +270,21 @@ class PlacePickerState extends State<PlacePicker> {
             _timer.cancel();
             setState(() {
               isConnectiong = false;
+              PrefUtils.sharedPreferences!.setBool('isConnectiong', false);
+
               isBrokerSelected = false;
             });
-            ProgressDialogUtils.showSnackBar(
-              context: context,
-              message: 'You request has been cancelled',
-            );
+            // ProgressDialogUtils.showSnackBar(
+            //   context: context,
+            //   message: 'You request has been cancelled',
+            // );
           } else if (res.connectionRequests != null &&
               res.connectionRequests!.status == "DECLINED") {
             _timer.cancel();
             setState(() {
               isConnectiong = false;
+              PrefUtils.sharedPreferences!.setBool('isConnectiong', false);
+
               isBrokerSelected = false;
             });
             ProgressDialogUtils.showSnackBar(
@@ -302,9 +305,12 @@ class PlacePickerState extends State<PlacePicker> {
     }
   }
 
-  getBrokers({latitude, longitude}) {
+  getBrokers({latitude, longitude}) async {
+    // prefs!.setBool('isCustomerRequestToConnect', false);
     print('ServiceId => ${widget.selectedserviceId} $latitude $longitude');
     setState(() {
+      PrefUtils.sharedPreferences!.setBool('isConnectiong', false);
+
       isConnectiong = false;
       isBrokerSelected = false;
     });
@@ -322,44 +328,72 @@ class PlacePickerState extends State<PlacePicker> {
         for (var i = 0; i < listofbrokers.length; i++) {
           // here you must check the broker is online or not,then add it to the list
           if (listofbrokers[i].avilableForWork == true) {
-            marker.add(Marker(
-              position: LatLng(
-                listofbrokers[i].locationLatitude ?? 0.0,
-                listofbrokers[i].locationLongtude ?? 0.0,
+            marker.add(
+              Marker(
+                position: LatLng(
+                  listofbrokers[i].locationLatitude ?? 0.0,
+                  listofbrokers[i].locationLongtude ?? 0.0,
+                ),
+                icon:  await BitmapDescriptor.fromAssetImage(
+                  ImageConfiguration(),
+                  'assets/images/markerImage.png',
+                ),
+                markerId: MarkerId('${listofbrokers[i].id}'),
+                onTap: () {
+                  if (PrefUtils.sharedPreferences!.getBool('isConnectiong') ==
+                      true) {
+                    print('hi ');
+
+                    ProgressDialogUtils.showSnackBar(
+                        context: context,
+                        message:
+                            "You have requested already. Please wait for the response or cancel the request");
+                  } else {
+                    print('hii ');
+
+                    setState(() {
+                      fullname = listofbrokers[i].fullName ?? "";
+                      rate = listofbrokers[i].rate ?? 0;
+                      hasCar = listofbrokers[i].hasCar ?? false;
+                      selectedbrokerId = listofbrokers[i].id.toString();
+                      phoneNumber = listofbrokers[i].phone ?? "";
+                      isBrokerSelected = true;
+                    });
+                  }
+                },
+                infoWindow: InfoWindow(
+                  title: '${listofbrokers[i].fullName}',
+                ),
               ),
-              icon: await BitmapDescriptor.fromAssetImage(
-                ImageConfiguration(),
-                'assets/images/markerImage.png',
-              ),
-              markerId: MarkerId('${listofbrokers[i].id}'),
-              onTap: () {
-                setState(() {
-                  fullname = listofbrokers[i].fullName ?? "";
-                  hasCar = listofbrokers[i].hasCar ?? false;
-                  selectedbrokerId = listofbrokers[i].id.toString();
-                  phoneNumber = listofbrokers[i].phone ?? "";
-                  isBrokerSelected = true;
-                });
-              },
-              infoWindow: InfoWindow(
-                title: '${listofbrokers[i].fullName}',
-              ),
-            ));
+            );
           }
         }
         ProgressDialogUtils.hideProgressDialog();
-        ProgressDialogUtils.showSnackBar(
-          context: context,
-          message:
-              'There are ${listofbrokers.length} Brokers are available around $placeName',
-        );
+        setState(() {
+          PrefUtils.sharedPreferences!.setBool('isSearching', true);
+        });
+        PrefUtils.sharedPreferences!.setString('description',
+            'There are ${listofbrokers.length} Brokers available around $placeName');
+        print('set 1');
+
+        // ProgressDialogUtils.showSnackBar(
+        //   context: context,
+        //   message:
+        //       'There are ${listofbrokers.length} Brokers available around $placeName',
+        // );
       } else {
         ProgressDialogUtils.hideProgressDialog();
-        ProgressDialogUtils.showSnackBar(
-          context: context,
-          message:
-              'There is no brokers available around $placeName. Please search another place',
-        );
+        setState(() {
+          PrefUtils.sharedPreferences!.setBool('isSearching', true);
+        });
+        PrefUtils.sharedPreferences!.setString('description',
+            'There are no brokers available around $placeName. Please search another place!');
+        print('set 2');
+        // ProgressDialogUtils.showSnackBar(
+        //   context: context,
+        //   message:
+        //       'There are no brokers available around $placeName. Please search another place!',
+        // );
       }
     }).catchError((e) {
       print('Error getting location: $e');
@@ -382,10 +416,14 @@ class PlacePickerState extends State<PlacePicker> {
       latitude: '',
       longitude: '',
     );
+    //  initPrefs();
+    PrefUtils().init();
     _requestStreamController =
         StreamController<CheckForCustomerRequestModel>.broadcast();
     super.initState();
   }
+
+  bool _initialized = false;
 
   @override
   void dispose() {
@@ -397,276 +435,567 @@ class PlacePickerState extends State<PlacePicker> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.background,
-        key: appBarKey,
-        title: SearchInput(searchPlace),
-        centerTitle: true,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_ios,
-            color: appTheme.orangeA200,
-            size: 20,
+    //initPrefs();
+
+    // bool controll = prefs.getBool('isConnectiong')!;
+    // print('controll $controll');
+    return WillPopScope(
+      onWillPop: () async {
+        if (PrefUtils.sharedPreferences!.getBool('isConnectiong') == true) {
+          return false;
+        } else {
+          return true;
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Theme.of(context).colorScheme.background,
+          key: appBarKey,
+          title: SearchInput(searchPlace),
+          centerTitle: true,
+          leading: IconButton(
+            icon: Icon(
+              Icons.arrow_back_ios,
+              color: appTheme.orangeA200,
+              size: 20,
+            ),
+            color: Theme.of(context).colorScheme.secondary,
+            onPressed: () {
+              if (PrefUtils.sharedPreferences!.getBool('isConnectiong') ==
+                  false) {
+                Navigator.pop(context); // Only pop if not waiting for response
+              }
+            },
           ),
-          color: Theme.of(context).colorScheme.secondary,
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          automaticallyImplyLeading: false,
         ),
-        automaticallyImplyLeading: false,
-      ),
-      backgroundColor: Theme.of(context).colorScheme.background,
-      body: Stack(
-        children: [
-          Column(
-            children: <Widget>[
-              Expanded(
-                child: GoogleMap(
-                  initialCameraPosition: CameraPosition(
-                    target: initialTarget,
-                    zoom: 19,
-                    bearing: 50,
-                  ),
-                  myLocationButtonEnabled: true,
-                  myLocationEnabled: true,
-                  onMapCreated: onMapCreated,
-                  // onTap: (latLng) {
-                  //   clearOverlay();
-                  //   moveToLocation(latLng);
-                  // },
-                  markers: Set<Marker>.of(marker),
+        backgroundColor: Theme.of(context).colorScheme.background,
+        body: Stack(
+          children: [
+            Column(
+              children: <Widget>[
+                Expanded(
+                  child: PrefUtils.sharedPreferences!
+                              .getBool('isConnectiong') ==
+                          true
+                      ? GoogleMap(
+                          initialCameraPosition: CameraPosition(
+                            target: initialTarget,
+                            zoom: 19,
+                            bearing: 50,
+                          ),
+                          myLocationButtonEnabled: true,
+                          myLocationEnabled: true,
+                          onMapCreated: onMapCreated,
+                          mapType: MapType.terrain, // Make the map dark
+                          gestureRecognizers: Set()
+                            ..add(Factory<OneSequenceGestureRecognizer>(() =>
+                                EagerGestureRecognizer())), // Disable all gestures
+                          markers: Set<Marker>.of(marker),
+                          liteModeEnabled: true, // Optionally enable lite mode
+                        )
+                      : GoogleMap(
+                          initialCameraPosition: CameraPosition(
+                            target: initialTarget,
+                            zoom: 19,
+                            bearing: 50,
+                          ),
+                          myLocationButtonEnabled: true,
+                          myLocationEnabled: true,
+                          onMapCreated: onMapCreated,
+                          // onTap: (latLng) {
+                          //   clearOverlay();
+                          //   moveToLocation(latLng);
+                          // },
+                          markers: Set<Marker>.of(marker),
+                        ),
                 ),
-              ),
-              hasSearchTerm
-                  ? const SizedBox()
-                  : isBrokerSelected
-                      ? Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: ResponsiveExtension(15).h,
-                            vertical: 25.v,
-                          ),
-                          decoration: AppDecoration.outlineWhite.copyWith(
-                            borderRadius: BorderRadiusStyle.customBorderTL25,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: <Widget>[
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
+                if (PrefUtils.sharedPreferences!.getBool('isConnectiong') ==
+                    false) ...[
+                  hasSearchTerm
+                      ? const SizedBox()
+                      : isBrokerSelected
+                          ? Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: ResponsiveExtension(15).h,
+                                vertical: 25.v,
+                              ),
+                              decoration: AppDecoration.outlineWhite.copyWith(
+                                borderRadius:
+                                    BorderRadiusStyle.customBorderTL25,
+                              ),
+                              child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  CustomImageView(
-                                    imagePath: ImageConstant.imageNotFound,
-                                    border: Border.all(
-                                      color: appTheme.orangeA200,
-                                      width: 1,
-                                    ),
-                                    height: 60.adaptSize,
-                                    width: 60.adaptSize,
-                                    radius: BorderRadius.circular(
-                                      30.h,
-                                    ),
-                                  ),
-                                  SizedBox(width: 20),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: <Widget>[
+                                  Row(
                                     mainAxisAlignment: MainAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
                                     children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceAround,
-                                        children: [
-                                          Text(
-                                            fullname,
-                                            style: const TextStyle(
-                                              color: Colors.grey,
-                                              fontSize: 15,
-                                            ),
-                                          ),
-                                          SizedBox(width: 20),
-                                          hasCar
-                                              ? CustomImageView(
-                                                  imagePath: ImageConstant.car,
-                                                  height: 14.adaptSize,
-                                                  width: 19.adaptSize,
-                                                )
-                                              : SizedBox(),
-                                        ],
+                                      CustomImageView(
+                                        imagePath: ImageConstant.imageNotFound,
+                                        border: Border.all(
+                                          color: appTheme.orangeA200,
+                                          width: 1,
+                                        ),
+                                        height: 60.adaptSize,
+                                        width: 60.adaptSize,
+                                        radius: BorderRadius.circular(
+                                          30.h,
+                                        ),
                                       ),
-                                      Row(
+                                      SizedBox(width: 20),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         mainAxisAlignment:
                                             MainAxisAlignment.start,
                                         children: [
-                                          Text(
-                                            '3.0',
-                                            style: const TextStyle(
-                                              color: Colors.grey,
-                                              fontSize: 15,
-                                            ),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceAround,
+                                            children: [
+                                              Text(
+                                                fullname,
+                                                style: const TextStyle(
+                                                  color: Colors.grey,
+                                                  fontSize: 15,
+                                                ),
+                                              ),
+                                              SizedBox(width: 20),
+                                              hasCar
+                                                  ? CustomImageView(
+                                                      imagePath:
+                                                          ImageConstant.car,
+                                                      height: 14.adaptSize,
+                                                      width: 19.adaptSize,
+                                                    )
+                                                  : SizedBox(),
+                                            ],
                                           ),
-                                          RatingBar.builder(
-                                            initialRating: 3,
-                                            itemSize: 30,
-                                            minRating: 1,
-                                            direction: Axis.horizontal,
-                                            allowHalfRating: true,
-                                            itemCount: 5,
-                                            itemPadding: EdgeInsets.symmetric(
-                                              horizontal: 4.0,
-                                            ),
-                                            itemBuilder: (context, _) => Icon(
-                                              Icons.star,
-                                              color: Colors.amber,
-                                            ),
-                                            onRatingUpdate: (rating) {
-                                              print(rating);
-                                            },
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                rate.toString(),
+                                                style: const TextStyle(
+                                                  color: Colors.grey,
+                                                  fontSize: 15,
+                                                ),
+                                              ),
+                                              RatingBar.builder(
+                                                initialRating: rate.toDouble(),
+                                                itemSize: 30,
+                                                minRating: 1,
+                                                direction: Axis.horizontal,
+                                                allowHalfRating: true,
+                                                itemCount: 5,
+                                                itemPadding:
+                                                    EdgeInsets.symmetric(
+                                                  horizontal: 4.0,
+                                                ),
+                                                itemBuilder: (context, _) =>
+                                                    Icon(
+                                                  Icons.star,
+                                                  color: Colors.amber,
+                                                ),
+                                                onRatingUpdate: (rating) {
+                                                  print(rating);
+                                                },
+                                                ignoreGestures: true,
+                                              ),
+                                            ],
                                           ),
                                         ],
                                       ),
                                     ],
                                   ),
-                                ],
-                              ),
-                              SizedBox(height: 20),
-                              Padding(
-                                padding: const EdgeInsets.only(left: 20.0),
-                                child: isConnectiong
-                                    ? StreamBuilder<
-                                        CheckForCustomerRequestModel>(
-                                        stream: _requestStreamController.stream,
-                                        builder: (context, snapshot) {
-                                          if (snapshot.hasData &&
-                                              snapshot.data != null &&
-                                              snapshot.data!
-                                                      .connectionRequests !=
-                                                  null &&
-                                              snapshot.data!.connectionRequests!
-                                                      .status ==
-                                                  "REQUESTED") {
-                                            return Column(
-                                              children: [
-                                                Padding(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                    horizontal: 40.0,
-                                                  ),
-                                                  child: Text(
-                                                    'Waiting for broker response...',
-                                                    style: TextStyle(
-                                                      color:
-                                                          appTheme.orangeA200,
-                                                      fontSize: 16,
+                                  SizedBox(height: 20),
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 20.0),
+                                    child: PrefUtils.sharedPreferences!
+                                                .getBool('isConnectiong') ==
+                                            true
+                                        ? StreamBuilder<
+                                            CheckForCustomerRequestModel>(
+                                            stream:
+                                                _requestStreamController.stream,
+                                            builder: (context, snapshot) {
+                                              if (snapshot.hasData &&
+                                                  snapshot.data != null &&
+                                                  snapshot.data!
+                                                          .connectionRequests !=
+                                                      null &&
+                                                  snapshot
+                                                          .data!
+                                                          .connectionRequests!
+                                                          .status ==
+                                                      "REQUESTED") {
+                                                return Column(
+                                                  children: [
+                                                    Padding(
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                        horizontal: 40.0,
+                                                      ),
+                                                      child: Text(
+                                                        'Waiting for broker response...',
+                                                        style: TextStyle(
+                                                          color: appTheme
+                                                              .orangeA200,
+                                                          fontSize: 16,
+                                                        ),
+                                                      ),
                                                     ),
-                                                  ),
+                                                    SizedBox(height: 20),
+                                                    _builCancelButton(
+                                                      context,
+                                                      snapshot,
+                                                    ),
+                                                  ],
+                                                );
+                                              } else if (snapshot.hasData &&
+                                                  snapshot.data != null &&
+                                                  snapshot.data!
+                                                          .connectionRequests !=
+                                                      null &&
+                                                  snapshot
+                                                          .data!
+                                                          .connectionRequests!
+                                                          .status ==
+                                                      "ACCEPTED") {
+                                                return SizedBox();
+                                              } else if (snapshot.hasData &&
+                                                  snapshot.data != null &&
+                                                  snapshot.data!
+                                                          .connectionRequests !=
+                                                      null &&
+                                                  snapshot
+                                                          .data!
+                                                          .connectionRequests!
+                                                          .status ==
+                                                      "CANCELLED") {
+                                                return SizedBox();
+                                              } else if (snapshot.hasError) {
+                                                print(
+                                                    'object snapshot error: ${snapshot.error}');
+                                                return SizedBox();
+                                              } else if (snapshot
+                                                          .connectionState ==
+                                                      ConnectionState.waiting ||
+                                                  snapshot.connectionState ==
+                                                      ConnectionState.none) {
+                                                return SizedBox();
+                                              } else {
+                                                return SizedBox();
+                                              }
+                                            },
+                                          )
+                                        : InkWell(
+                                            onTap: () {
+                                              isCheckedtersm = !isCheckedtersm;
+                                              setState(() {});
+                                            },
+                                            child: Row(
+                                              children: <Widget>[
+                                                Checkbox(
+                                                  value: isCheckedtersm,
+                                                  activeColor:
+                                                      appTheme.orangeA200,
+                                                  checkColor: Colors.white,
+                                                  onChanged: (value) {
+                                                    isCheckedtersm =
+                                                        !isCheckedtersm;
+                                                    setState(() {});
+                                                  },
                                                 ),
-                                                SizedBox(height: 20),
-                                                _builCancelButton(
-                                                  context,
-                                                  snapshot,
+                                                RichText(
+                                                  maxLines: 2,
+                                                  text: TextSpan(
+                                                    text: 'Accept',
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodyLarge,
+                                                    children: <TextSpan>[
+                                                      const TextSpan(text: ' '),
+                                                      TextSpan(
+                                                        text:
+                                                            'Term & condition',
+                                                        style: TextStyle(
+                                                            color: appTheme
+                                                                .orangeA200,
+                                                            decoration:
+                                                                TextDecoration
+                                                                    .underline),
+                                                        recognizer:
+                                                            TapGestureRecognizer()
+                                                              ..onTap = () =>
+                                                                  Navigator
+                                                                      .push(
+                                                                    context,
+                                                                    MaterialPageRoute(
+                                                                      builder:
+                                                                          (context) =>
+                                                                              const PrivacyTermScreen(),
+                                                                    ),
+                                                                  ),
+                                                      ),
+                                                    ],
+                                                  ),
                                                 ),
                                               ],
+                                            ),
+                                          ),
+                                  ),
+                                  SizedBox(height: 20),
+                                  PrefUtils.sharedPreferences!
+                                              .getBool('isConnectiong') ==
+                                          true
+                                      ? SizedBox()
+                                      : _builConnectButton(context),
+                                ],
+                              ),
+                            )
+                          : SelectPlaceAction(getLocationName(), () {}),
+                ] else ...[
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: ResponsiveExtension(15).h,
+                      vertical: 25.v,
+                    ),
+                    decoration: AppDecoration.outlineWhite.copyWith(
+                      borderRadius: BorderRadiusStyle.customBorderTL25,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: <Widget>[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            CustomImageView(
+                              imagePath: ImageConstant.imageNotFound,
+                              border: Border.all(
+                                color: appTheme.orangeA200,
+                                width: 1,
+                              ),
+                              height: 60.adaptSize,
+                              width: 60.adaptSize,
+                              radius: BorderRadius.circular(
+                                30.h,
+                              ),
+                            ),
+                            SizedBox(width: 20),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
+                                  children: [
+                                    Text(
+                                      PrefUtils.sharedPreferences!
+                                              .getString('fullname') ??
+                                          "",
+                                      style: const TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    SizedBox(width: 20),
+                                    hasCar
+                                        ? CustomImageView(
+                                            imagePath: ImageConstant.car,
+                                            height: 14.adaptSize,
+                                            width: 19.adaptSize,
+                                          )
+                                        : SizedBox(),
+                                  ],
+                                ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    PrefUtils.sharedPreferences!
+                                                .getDouble('rate') !=
+                                            null
+                                        ? Text(
+                                            PrefUtils.sharedPreferences!
+                                                .getDouble('rate')!
+                                                .toString(),
+                                            style: const TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: 15,
+                                            ),
+                                          )
+                                        : Text(0.0.toString()),
+                                    RatingBar.builder(
+                                      initialRating: PrefUtils
+                                                  .sharedPreferences!
+                                                  .getDouble('rate') ==
+                                              null
+                                          ? 0.0
+                                          : PrefUtils.sharedPreferences!
+                                              .getDouble('rate')!,
+                                      itemSize: 30,
+                                      minRating: 1,
+                                      direction: Axis.horizontal,
+                                      allowHalfRating: true,
+                                      itemCount: 5,
+                                      itemPadding: EdgeInsets.symmetric(
+                                        horizontal: 4.0,
+                                      ),
+                                      itemBuilder: (context, _) => Icon(
+                                        Icons.star,
+                                        color: Colors.amber,
+                                      ),
+                                      onRatingUpdate: (rating) {
+                                        print(rating);
+                                      },
+                                      ignoreGestures: true,
+                                    ),
+                                  ],
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10.0, vertical: 20),
+                                  child: Text(
+                                    'Waiting for broker response...',
+                                    style: TextStyle(
+                                      color: appTheme.orangeA200,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    showDialog(
+                                      context: context,
+                                      barrierDismissible:
+                                          false, // Prevent dialog from closing on outside tap
+                                      builder: (context) => GestureDetector(
+                                        behavior: HitTestBehavior.opaque,
+                                        onTap:
+                                            () {}, // Prevents taps from reaching underlying widgets
+                                        child: CustomDialog(
+                                          amount: '',
+                                          color: appTheme.orangeA200,
+                                          buttonLabel: 'Submit',
+                                          cancelReasons: cancelreason,
+                                          icon: Icons.done_all_rounded,
+                                          message: '',
+                                          onClick: (value) async {
+                                            Navigator.pop(
+                                                context); // Dismiss the dialog programmatically
+                                            ProgressDialogUtils
+                                                .showProgressDialog(
+                                              context: context,
+                                              isCancellable: false,
                                             );
-                                          } else if (snapshot.hasData &&
-                                              snapshot.data != null &&
-                                              snapshot.data!
-                                                      .connectionRequests !=
-                                                  null &&
-                                              snapshot.data!.connectionRequests!
-                                                      .status ==
-                                                  "ACCEPTED") {
-                                            return SizedBox();
-                                          } else if (snapshot
-                                                  .hasData &&
-                                              snapshot.data != null &&
-                                              snapshot.data!
-                                                      .connectionRequests !=
-                                                  null &&
-                                              snapshot.data!.connectionRequests!
-                                                      .status ==
-                                                  "CANCELLED") {
-                                            return SizedBox();
-                                          } else if (snapshot.hasError) {
-                                            print(
-                                                'object snapshot error: ${snapshot.error}');
-                                            return SizedBox();
-                                          } else if (snapshot.connectionState ==
-                                                  ConnectionState.waiting ||
-                                              snapshot.connectionState ==
-                                                  ConnectionState.none) {
-                                            return SizedBox();
-                                          } else {
-                                            return SizedBox();
-                                          }
-                                        },
-                                      )
-                                    : InkWell(
-                                        onTap: () {
-                                          isCheckedtersm = !isCheckedtersm;
-                                          setState(() {});
-                                        },
-                                        child: Row(
-                                          children: <Widget>[
-                                            Checkbox(
-                                              value: isCheckedtersm,
-                                              activeColor: appTheme.orangeA200,
-                                              checkColor: Colors.white,
-                                              onChanged: (value) {
-                                                isCheckedtersm =
-                                                    !isCheckedtersm;
-                                                setState(() {});
-                                              },
-                                            ),
-                                            RichText(
-                                              maxLines: 2,
-                                              text: TextSpan(
-                                                text: 'Accept',
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .bodyLarge,
-                                                children: <TextSpan>[
-                                                  const TextSpan(text: ' '),
-                                                  TextSpan(
-                                                    text: 'Term & condition',
-                                                    style: TextStyle(
-                                                        color:
-                                                            appTheme.orangeA200,
-                                                        decoration:
-                                                            TextDecoration
-                                                                .underline),
-                                                    recognizer:
-                                                        TapGestureRecognizer()
-                                                          ..onTap = () =>
-                                                              Navigator.push(
-                                                                context,
-                                                                MaterialPageRoute(
-                                                                  builder:
-                                                                      (context) =>
-                                                                          const PrivacyTermScreen(),
-                                                                ),
-                                                              ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
+                                            var respo = await ApiAuthHelper
+                                                .cancelBrokerRequest(
+                                              cennectionId: PrefUtils
+                                                  .sharedPreferences!
+                                                  .getInt('connectionId'),
+                                              reason: cancelreason[value],
+                                            );
+                                            setState(() {
+                                              isConnectiong = false;
+                                              PrefUtils.sharedPreferences!
+                                                  .setBool(
+                                                      'isConnectiong', false);
+
+                                              isBrokerSelected = false;
+                                              _timer.cancel();
+                                            });
+                                            if (respo) {
+                                              ProgressDialogUtils
+                                                  .hideProgressDialog();
+                                              setState(() {
+                                                isConnectiong = false;
+                                                PrefUtils.sharedPreferences!
+                                                    .setBool(
+                                                        'isConnectiong', false);
+
+                                                isBrokerSelected = false;
+                                                _timer.cancel();
+                                              });
+                                            } else {
+                                              ProgressDialogUtils
+                                                  .hideProgressDialog();
+                                              ProgressDialogUtils.showSnackBar(
+                                                context: context,
+                                                message: 'Something went wrong',
+                                              );
+                                            }
+                                          },
+                                          title: 'Cancel reason',
                                         ),
                                       ),
-                              ),
-                              SizedBox(height: 20),
-                              isConnectiong
-                                  ? SizedBox()
-                                  : _builConnectButton(context),
-                            ],
-                          ),
-                        )
-                      : SelectPlaceAction(getLocationName(), () {}),
-            ],
-          ),
-        ],
+                                    );
+                                  },
+                                  child: Container(
+                                    width: 250,
+                                    height: 50,
+                                    alignment: Alignment.bottomCenter,
+                                    padding: const EdgeInsets.only(
+                                        top: 10, bottom: 10),
+                                    clipBehavior: Clip.antiAlias,
+                                    decoration: ShapeDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment(0.79, 0.61),
+                                        end: Alignment(-0.79, -0.61),
+                                        colors: [
+                                          Color(0xFFF06400),
+                                          Color(0xFFFFA05B)
+                                        ],
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        side: BorderSide(
+                                            width: 0.50, color: Colors.white),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        'Cancel',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontFamily: 'Poppins',
+                                          fontWeight: FontWeight.w700,
+                                          height: 0,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              ],
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 20),
+                        SizedBox(height: 20),
+                        PrefUtils.sharedPreferences!
+                                    .containsKey('isConnectiong') &&
+                                PrefUtils.sharedPreferences!
+                                        .getBool('isConnectiong') ==
+                                    true
+                            ? SizedBox()
+                            : _builConnectButton(context),
+                      ],
+                    ),
+                  )
+                ]
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -683,8 +1012,8 @@ class PlacePickerState extends State<PlacePicker> {
             builder: (context) => CustomDialog(
               amount: '',
               color: appTheme.orangeA200,
-              buttonLable: 'Submit',
-              cancelreason: cancelreason,
+              buttonLabel: 'Submit',
+              cancelReasons: cancelreason,
               icon: Icons.done_all_rounded,
               message: '',
               onClick: (value) async {
@@ -701,6 +1030,9 @@ class PlacePickerState extends State<PlacePicker> {
                   ProgressDialogUtils.hideProgressDialog();
                   setState(() {
                     isConnectiong = false;
+                    PrefUtils.sharedPreferences!
+                        .setBool('isConnectiong', false);
+
                     isBrokerSelected = false;
                     _timer.cancel();
                   });
@@ -754,6 +1086,9 @@ class PlacePickerState extends State<PlacePicker> {
   Widget _builConnectButton(BuildContext context) {
     return ElevatedButton(
       onPressed: () async {
+        PrefUtils.sharedPreferences!.setString('fullname', fullname);
+        PrefUtils.sharedPreferences!.setDouble('rate', rate.toDouble());
+        print('rate is ============== $rate');
         if (isCheckedtersm) {
           ProgressDialogUtils.showProgressDialog(
             context: context,
@@ -771,10 +1106,11 @@ class PlacePickerState extends State<PlacePicker> {
             print('================================');
             print('Connection Id is not null');
             print('================================');
-            setState(() {
-              connectionId = response[0].id;
-              isConnectiong = true;
-            });
+            connectionId = response[0].id;
+            isConnectiong = true;
+            PrefUtils.sharedPreferences!.setInt('connectionId', connectionId!);
+            PrefUtils.sharedPreferences!.setBool('isConnectiong', true);
+            setState(() {});
             _timer = Timer.periodic(Duration(seconds: 3), (timer) {
               _fetchUserRequests();
             });
@@ -787,7 +1123,7 @@ class PlacePickerState extends State<PlacePicker> {
             ProgressDialogUtils.hideProgressDialog();
             return;
           }
-        } else {
+        } else if (!isCheckedtersm) {
           ProgressDialogUtils.showSnackBar(
             context: context,
             message: 'Please accept our terms and conditions',
@@ -812,7 +1148,9 @@ class PlacePickerState extends State<PlacePicker> {
         ),
         child: Center(
           child: Text(
-            !isConnectiong ? 'Connect' : 'Cancel',
+            PrefUtils.sharedPreferences!.getBool('isConnectiong') == false
+                ? 'lbl_connect'.tr
+                : 'lbl_cancel'.tr,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white,
@@ -1258,8 +1596,14 @@ class SearchInputState extends State<SearchInput> {
 
   SearchInputState();
 
+  bool initialized = false;
+  bool isSearchng = false;
+//  SharedPreferences? tryu;
+
   @override
   void initState() {
+    //initPrefs();
+    PrefUtils().init();
     super.initState();
     editController.addListener(onSearchInputChange);
   }
@@ -1291,64 +1635,83 @@ class SearchInputState extends State<SearchInput> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 6,
-      ),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(4),
-        color: appTheme.gray40001,
-      ),
-      child: Row(
-        children: <Widget>[
-          const SizedBox(width: 8),
-          Expanded(
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search Place',
-                border: InputBorder.none,
-              ),
-              style: TextStyle(color: Colors.black),
-              controller: editController,
-              onChanged: (value) {
-                setState(() {
-                  hasSearchEntry = value.isNotEmpty;
-                });
-              },
-            ),
-          ),
-          const SizedBox(
-            width: 8,
-          ),
-          hasSearchEntry
-              ? GestureDetector(
-                  onTap: () {
-                    editController.clear();
-                    setState(() {
-                      hasSearchEntry = false;
-                    });
-                  },
-                  child: const Icon(
-                    Icons.clear,
-                    color: Colors.grey,
+        padding: const EdgeInsets.symmetric(
+          horizontal: 6,
+        ),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(4),
+          color: appTheme.gray40001,
+        ),
+        child: PrefUtils.sharedPreferences!.getBool('isConnectiong') == false ||
+                !PrefUtils.sharedPreferences!.containsKey('isConnectiong')
+            ? Row(
+                children: <Widget>[
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: 'lbl_search_place'.tr,
+                        border: InputBorder.none,
+                      ),
+                      style: TextStyle(color: Colors.black),
+                      controller: editController,
+                      onChanged: (value) {
+                        setState(() {
+                          hasSearchEntry = value.isNotEmpty;
+                        });
+                      },
+                    ),
                   ),
-                )
-              : const SizedBox(),
-        ],
-      ),
-    );
+                  const SizedBox(
+                    width: 8,
+                  ),
+                  hasSearchEntry
+                      ? GestureDetector(
+                          onTap: () {
+                            editController.clear();
+                            setState(() {
+                              hasSearchEntry = false;
+                            });
+                          },
+                          child: const Icon(
+                            Icons.clear,
+                            color: Colors.grey,
+                          ),
+                        )
+                      : const SizedBox(),
+                ],
+              )
+            : SizedBox.shrink()
+        // : SizedBox.shrink(),
+        );
   }
 }
 
-class SelectPlaceAction extends StatelessWidget {
+class SelectPlaceAction extends StatefulWidget {
   final String? locationName;
   final VoidCallback onTap;
 
   const SelectPlaceAction(this.locationName, this.onTap);
 
   @override
+  State<SelectPlaceAction> createState() => _SelectPlaceActionState();
+}
+
+class _SelectPlaceActionState extends State<SelectPlaceAction> {
+  // SharedPreferences? prefs;
+  bool initialized = false;
+
+  @override
+  void initState() {
+    PrefUtils().init();
+    super.initState();
+    // initPref();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return InkResponse(
-      onTap: onTap,
+      onTap: widget.onTap,
       child: Container(
         decoration: AppDecoration.outlineWhite.copyWith(
           borderRadius: BorderRadiusStyle.customBorderTL25,
@@ -1370,9 +1733,15 @@ class SelectPlaceAction extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'Please tap on the nearest delala',
-                    style: const TextStyle(
-                      color: Colors.grey,
+                    PrefUtils.sharedPreferences!.getBool('isSearching') == true
+                        ? PrefUtils.sharedPreferences!.getString('description')!
+                        : 'lbl_please_tap_on_the_nearest_delala'.tr,
+                    style: TextStyle(
+                      color:
+                          PrefUtils.sharedPreferences!.getBool('isSearching') ==
+                                  true
+                              ? Colors.black
+                              : Colors.grey,
                       fontSize: 15,
                     ),
                   ),

@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:io';
 
+import 'package:delalochu/localization/lang_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -17,6 +18,9 @@ void main() {
     ]),
   ]).then((value) async {
     PrefUtils().init();
+    var languageProvider = LanguageProvider();
+    await languageProvider.init();
+
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final bool? isLoggedIn = (prefs.getBool('isLoggedIn') == null)
         ? false
@@ -37,10 +41,14 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Sizer(
       builder: (context, orientation, deviceType) {
-        return ChangeNotifierProvider(
-          create: (context) => ThemeProvider(),
-          child: Consumer<ThemeProvider>(
-            builder: (context, provider, child) {
+        return MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (_) => LanguageProvider()),
+            ChangeNotifierProvider(create: (context) => ThemeProvider()),
+          ],
+          child:  Consumer2<ThemeProvider, LanguageProvider>(
+            builder: (context, provider, languageProvider, child) {
+              print('currentLocale ${languageProvider.currentLocale}');
               return MaterialApp(
                 theme: theme,
                 title: 'delalochu',
@@ -53,11 +61,11 @@ class MyApp extends StatelessWidget {
                   GlobalCupertinoLocalizations.delegate,
                 ],
                 supportedLocales: [
-                  Locale(
-                    'en',
-                    '',
-                  ),
+                  Locale('en', ''),
+                  Locale('am', ''),
+                  Locale('da', ''),
                 ],
+                locale:Locale(PrefUtils.sharedPreferences?.getString('language_code') ?? 'en','') ,
                 initialRoute: AppRoutes.initialRoute,
                 routes: AppRoutes.routes,
               );

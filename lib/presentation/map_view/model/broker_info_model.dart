@@ -15,6 +15,7 @@ class BrokerInfo {
   dynamic googleId;
   String? fullName;
   dynamic email;
+  dynamic rate;
   String? phone;
   String? password;
   String? photo;
@@ -35,6 +36,7 @@ class BrokerInfo {
     this.googleId,
     this.fullName,
     this.email,
+    this.rate,
     this.phone,
     this.password,
     this.photo,
@@ -56,6 +58,7 @@ class BrokerInfo {
         googleId: json["googleId"],
         fullName: json["fullName"],
         email: json["email"],
+        rate: json["averageRating"],
         phone: json["phone"],
         password: json["password"],
         photo: json["photo"],
@@ -87,6 +90,7 @@ class BrokerInfo {
         "googleId": googleId,
         "fullName": fullName,
         "email": email,
+        "averageRating": rate,
         "phone": phone,
         "password": password,
         "photo": photo,

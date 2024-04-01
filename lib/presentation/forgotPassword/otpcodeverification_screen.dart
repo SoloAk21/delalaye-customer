@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:delalochu/core/app_export.dart';
 import 'package:delalochu/core/utils/image_tools.dart';
+import 'package:delalochu/localization/lang_provider.dart';
 import 'package:delalochu/presentation/forgotPassword/models/otpCodeModel.dart';
 import 'package:delalochu/presentation/signupscreen_screen/models/signupscreen_model.dart';
 import 'package:flutter/material.dart';

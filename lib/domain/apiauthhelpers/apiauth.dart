@@ -14,30 +14,39 @@ import '../../core/utils/pref_utils.dart';
 import '../../presentation/homescreen_screen/models/connectionhistoryModel.dart';
 
 class ApiAuthHelper {
-  static var domain = "https://api.delalaye.com";
+  static var domain = "https://dev-api.delalaye.com";
+  static var prodomain = "https://api.delalaye.com";
 
   static Future<bool> updateProfile(
-      {username, phoneNumber, password, image = '', isnopasandimage}) async {
+      {username, phoneNumber, password, image, isnopasandimage}) async {
     try {
+      print('image $image');
       var token = PrefUtils.sharedPreferences!.getString('token') ?? '';
       var userId = PrefUtils.sharedPreferences!.getInt('userId') ?? '';
       var headers = {'x-auth-token': token, 'Content-Type': 'application/json'};
       var request =
           http.Request('PUT', Uri.parse('$domain/api/users/profile/$userId'));
       if (isnopasandimage) {
+        print('is no pass and iamge');
         request.body =
             json.encode({"fullName": username, "phone": phoneNumber});
       } else {
         if (password != '' && image == '') {
+        print(' pass and no iamge');
+
           request.body = json.encode({
             "fullName": username,
             "phone": phoneNumber,
             "password": password
           });
         } else if (password == '' && image != '') {
+        print('is no pass and has iamge $image');
+
           request.body = json.encode(
               {"fullName": username, "phone": phoneNumber, "photo": image});
         } else if (password != '' && image != '') {
+        print('has pass and iamge');
+
           request.body = json.encode({
             "fullName": username,
             "phone": phoneNumber,
@@ -143,7 +152,7 @@ class ApiAuthHelper {
       print('token: ' + token);
       var headers = {'x-auth-token': token};
       var request = http.Request('GET',
-          Uri.parse('https://api.delalaye.com/api/users/connection/history'));
+          Uri.parse('https://dev-api.delalaye.com/api/users/connection/history'));
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
       if (response.statusCode == 200) {
@@ -496,7 +505,7 @@ class ApiAuthHelper {
       var request = http.Request(
           'GET',
           Uri.parse(
-              'https://api.delalaye.com/api/broker/filter?serviceId=$serviceId&latitude=$latitude&longitude=$longitude'));
+              'https://dev-api.delalaye.com/api/broker/filter?serviceId=$serviceId&latitude=$latitude&longitude=$longitude'));
       http.StreamedResponse response = await request.send();
       if (response.statusCode == 200) {
         final List<dynamic> responseData =

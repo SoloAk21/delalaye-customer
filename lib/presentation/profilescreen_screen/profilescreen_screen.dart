@@ -41,6 +41,7 @@ class ProfilescreenScreenState extends State<ProfilescreenScreen> {
   String password = "";
 
   File? fileImages;
+  File? oldfileImages;
 
   @override
   void initState() {
@@ -60,11 +61,18 @@ class ProfilescreenScreenState extends State<ProfilescreenScreen> {
               Consumer<ProfilescreenProvider>(builder: (context, value, child) {
             if (value.loading) {
               return Center(
-                child: Align(
-                    alignment: Alignment.center,
-                    child: CircularProgressIndicator()),
+                child: CircularProgressIndicator(),
               );
             } else {
+              WidgetsBinding.instance.endOfFrame.then((F) async {
+                Uint8List decodedBytes = ImageTools.decodeBase64ToUint8List(
+                    value.brokerData.user!.photo ?? '');
+                var oldfileImag = await ImageTools.writeToFile(decodedBytes,
+                    fileName: "decoded_image", fileExtension: "png");
+                setState(() {
+                  oldfileImages = oldfileImag;
+                });
+              });
               return Padding(
                 padding: EdgeInsets.only(left: 33.h, right: 16.h, bottom: 5.v),
                 child: Column(
@@ -104,18 +112,53 @@ class ProfilescreenScreenState extends State<ProfilescreenScreen> {
                                     ),
                                   ),
                                 )
-                              : CustomImageView(
-                                  onTap: () {
-                                    _showOption(context);
-                                  },
-                                  imagePath: value.brokerData.user != null &&
-                                          value.brokerData.user!.photo != null
-                                      ? value.brokerData.user!.photo
-                                      : ImageConstant.imageNotFound,
-                                  height: 70.adaptSize,
-                                  width: 70.adaptSize,
-                                  radius: BorderRadius.circular(35.h),
-                                ),
+                              : oldfileImages == null
+                                  ? CustomImageView(
+                                      onTap: () {
+                                        _showOption(context);
+                                      },
+                                      imagePath: ImageConstant.imageNotFound,
+                                      height: 60.adaptSize,
+                                      width: 60.adaptSize,
+                                      radius: BorderRadius.circular(
+                                        30.h,
+                                      ),
+                                      margin: EdgeInsets.only(
+                                        top: 2.v,
+                                        bottom: 7.v,
+                                      ),
+                                    )
+                                  : GestureDetector(
+                                      onTap: () {
+                                        _showOption(context);
+                                      },
+                                      child: DottedBorder(
+                                        color: appTheme.blueGray400,
+                                        padding: EdgeInsets.only(
+                                            left: 1.h,
+                                            top: 1.v,
+                                            right: 1.h,
+                                            bottom: 1.v),
+                                        strokeWidth: 1.h,
+                                        radius: Radius.circular(35),
+                                        borderType: BorderType.RRect,
+                                        dashPattern: [2, 2],
+                                        child: Container(
+                                          height: 70.v,
+                                          width: 70.h,
+                                          decoration: AppDecoration
+                                              .outlineBlueGray
+                                              .copyWith(
+                                            borderRadius: BorderRadiusStyle
+                                                .circleBorder35,
+                                            image: DecorationImage(
+                                              fit: BoxFit.cover,
+                                              image: FileImage(oldfileImages!),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                           Padding(
                             padding: EdgeInsets.only(
                                 left: 15.h, top: 15.v, bottom: 13.v),
@@ -148,35 +191,31 @@ class ProfilescreenScreenState extends State<ProfilescreenScreen> {
                     SizedBox(height: 15.v),
                     _buildPhoneNumber(context, value),
                     SizedBox(height: 15.v),
-                    _buildPassword(context, value),
+                   // _buildPassword(context, value),
                     SizedBox(height: 333.v),
                     Align(
                       alignment: Alignment.centerLeft,
                       child: ElevatedButton(
                         onPressed: () async {
-                          if (password != '' && fileImages != null) {
+                          if (fileImages != null) {
                             ProgressDialogUtils.showProgressDialog(
                               context: context,
                               isCancellable: false,
                             );
+                            print('fileImages => $fileImages');
                             final convertedbase64Encode =
                                 ImageTools.convertImagesToBase64(fileImages!);
+                            PrefUtils.sharedPreferences!
+                                .setString('imagefile', convertedbase64Encode);
                             var res = await ApiAuthHelper.updateProfile(
                               isnopasandimage: false,
                               image: convertedbase64Encode,
                               username: username == ''
-                                  ? value.brokerData.user != null &&
-                                          value.brokerData.user!.fullName !=
-                                              null
-                                      ? value.brokerData.user!.fullName
-                                      : username
+                                  ? value.brokerData.user!.fullName
                                   : username,
                               password: password,
                               phoneNumber: phonenumber == ''
-                                  ? value.brokerData.user != null &&
-                                          value.brokerData.user!.phone != null
-                                      ? value.brokerData.user!.phone
-                                      : phonenumber
+                                  ? value.brokerData.user!.phone
                                   : phonenumber,
                             );
                             if (res) {
@@ -184,16 +223,18 @@ class ProfilescreenScreenState extends State<ProfilescreenScreen> {
                               ProgressDialogUtils.showSnackBar(
                                 context: context,
                                 message:
-                                    'You have successfully updated your profile',
+                                    'lbl_you_have_successfully_updated_your_profile'.tr,
+                               // duration: 2,
                               );
                             } else {
                               ProgressDialogUtils.hideProgressDialog();
                               ProgressDialogUtils.showSnackBar(
                                 context: context,
                                 message: 'something went wrong',
+                              //  duration: 2,
                               );
                             }
-                          } else if (username != '' || phonenumber != '') {
+                          } else {
                             ProgressDialogUtils.showProgressDialog(
                               context: context,
                               isCancellable: false,
@@ -201,17 +242,11 @@ class ProfilescreenScreenState extends State<ProfilescreenScreen> {
                             var res = await ApiAuthHelper.updateProfile(
                               isnopasandimage: true,
                               username: username == ''
-                                  ? value.brokerData.user != null &&
-                                          value.brokerData.user!.fullName !=
-                                              null
-                                      ? value.brokerData.user!.fullName
-                                      : username
+                                  ? value.brokerData.user!.fullName
                                   : username,
+                              image: '',
                               phoneNumber: phonenumber == ''
-                                  ? value.brokerData.user != null &&
-                                          value.brokerData.user!.phone != null
-                                      ? value.brokerData.user!.phone
-                                      : phonenumber
+                                  ? value.brokerData.user!.phone
                                   : phonenumber,
                             );
                             if (res) {
@@ -219,87 +254,15 @@ class ProfilescreenScreenState extends State<ProfilescreenScreen> {
                               ProgressDialogUtils.showSnackBar(
                                 context: context,
                                 message:
-                                    'You have successfully updated your profile',
+                                    'lbl_you_have_successfully_updated_your_profile'.tr,
+                               // duration: 2,
                               );
                             } else {
                               ProgressDialogUtils.hideProgressDialog();
                               ProgressDialogUtils.showSnackBar(
                                 context: context,
                                 message: 'something went wrong',
-                              );
-                            }
-                          } else if (password != '' && fileImages == null) {
-                            ProgressDialogUtils.showProgressDialog(
-                              context: context,
-                              isCancellable: false,
-                            );
-                            var res = await ApiAuthHelper.updateProfile(
-                              isnopasandimage: true,
-                              username: username == ''
-                                  ? value.brokerData.user != null &&
-                                          value.brokerData.user!.fullName !=
-                                              null
-                                      ? value.brokerData.user!.fullName
-                                      : username
-                                  : username,
-                              phoneNumber: phonenumber == ''
-                                  ? value.brokerData.user != null &&
-                                          value.brokerData.user!.phone != null
-                                      ? value.brokerData.user!.phone
-                                      : phonenumber
-                                  : phonenumber,
-                              password: password,
-                            );
-                            if (res) {
-                              ProgressDialogUtils.hideProgressDialog();
-                              ProgressDialogUtils.showSnackBar(
-                                context: context,
-                                message:
-                                    'You have successfully updated your profile',
-                              );
-                            } else {
-                              ProgressDialogUtils.hideProgressDialog();
-                              ProgressDialogUtils.showSnackBar(
-                                context: context,
-                                message: 'something went wrong',
-                              );
-                            }
-                          } else if (password == '' && fileImages != null) {
-                            ProgressDialogUtils.showProgressDialog(
-                              context: context,
-                              isCancellable: false,
-                            );
-                            final convertedbase64Encode =
-                                ImageTools.convertImagesToBase64(fileImages!);
-                            var res = await ApiAuthHelper.updateProfile(
-                              isnopasandimage: true,
-                              username: username == ''
-                                  ? value.brokerData.user != null &&
-                                          value.brokerData.user!.fullName !=
-                                              null
-                                      ? value.brokerData.user!.fullName
-                                      : username
-                                  : username,
-                              phoneNumber: phonenumber == ''
-                                  ? value.brokerData.user != null &&
-                                          value.brokerData.user!.phone != null
-                                      ? value.brokerData.user!.phone
-                                      : phonenumber
-                                  : phonenumber,
-                              image: convertedbase64Encode,
-                            );
-                            if (res) {
-                              ProgressDialogUtils.hideProgressDialog();
-                              ProgressDialogUtils.showSnackBar(
-                                context: context,
-                                message:
-                                    'You have successfully updated your profile',
-                              );
-                            } else {
-                              ProgressDialogUtils.hideProgressDialog();
-                              ProgressDialogUtils.showSnackBar(
-                                context: context,
-                                message: 'something went wrong',
+                               // duration: 2,
                               );
                             }
                           }
@@ -396,14 +359,8 @@ class ProfilescreenScreenState extends State<ProfilescreenScreen> {
           child: Consumer<ProfilescreenProvider>(
             builder: (context, provider, child) {
               return CustomTextFormField(
-                initialValue: (value.brokerData.user != null) &&
-                        (value.brokerData.user!.fullName != null)
-                    ? value.brokerData.user!.fullName
-                    : '',
-                hintText: value.brokerData.user != null &&
-                        value.brokerData.user!.fullName != null
-                    ? value.brokerData.user!.fullName
-                    : '',
+                initialValue: value.brokerData.user!.fullName ?? '',
+                hintText: value.brokerData.user!.fullName ?? '',
                 onChanged: (p0) => username = p0,
                 autofocus: false,
                 textStyle: TextStyle(color: Colors.black),
@@ -452,14 +409,8 @@ class ProfilescreenScreenState extends State<ProfilescreenScreen> {
           child: Consumer<ProfilescreenProvider>(
             builder: (context, provider, child) {
               return CustomTextFormField(
-                initialValue: value.brokerData.user != null &&
-                        value.brokerData.user!.phone != null
-                    ? value.brokerData.user!.phone
-                    : '',
-                hintText: value.brokerData.user != null &&
-                        value.brokerData.user!.phone != null
-                    ? value.brokerData.user!.phone
-                    : '',
+                initialValue: value.brokerData.user!.phone ?? '',
+                hintText: value.brokerData.user!.phone ?? '',
                 onChanged: (p0) => phonenumber = p0,
                 textStyle: TextStyle(color: Colors.black),
                 prefix: Container(
@@ -501,7 +452,7 @@ class ProfilescreenScreenState extends State<ProfilescreenScreen> {
       children: [
         Padding(
             padding: EdgeInsets.only(left: 3.h),
-            child: Text("lbl_password".tr,
+            child: Text("lbl_bio".tr,
                 style: TextStyle(
                     color: appTheme.blueGray400,
                     fontSize: 14.fSize,
@@ -513,43 +464,34 @@ class ProfilescreenScreenState extends State<ProfilescreenScreen> {
           child: Consumer<ProfilescreenProvider>(
             builder: (context, provider, child) {
               return CustomTextFormField(
-                  onChanged: (p0) => password = p0,
-                  hintText: "lbl2".tr,
-                  textInputAction: TextInputAction.done,
-                  textInputType: TextInputType.visiblePassword,
-                  textStyle: TextStyle(color: Colors.black),
-                  prefix: Container(
-                    margin:
-                        EdgeInsets.symmetric(horizontal: 8.h, vertical: 15.v),
+                onChanged: (p0) => password = p0,
+                contentPadding: EdgeInsets.symmetric(horizontal: 10),
+                maxLines: 5,
+                hintText: "lbl_type_about_yourself".tr,
+                textInputAction: TextInputAction.done,
+                textInputType: TextInputType.text,
+                textStyle: TextStyle(color: Colors.black),
+                hintStyle: TextStyle(),
+                prefixConstraints: BoxConstraints(maxHeight: 46.v),
+                suffix: InkWell(
+                  // onTap: () {
+                  //   provider.changePasswordVisibility();
+                  // },
+                  child: Container(
+                    margin: EdgeInsets.fromLTRB(30.h, 15.v, 8.h, 15.v),
                     child: CustomImageView(
-                      imagePath: ImageConstant.imgFisslock,
+                      imagePath: ImageConstant.imgEdit,
                       height: 16.adaptSize,
                       width: 16.adaptSize,
                     ),
                   ),
-                  prefixConstraints: BoxConstraints(maxHeight: 46.v),
-                  suffix: InkWell(
-                    onTap: () {
-                      provider.changePasswordVisibility();
-                    },
-                    child: Container(
-                      margin: EdgeInsets.fromLTRB(30.h, 15.v, 8.h, 15.v),
-                      child: CustomImageView(
-                        imagePath: ImageConstant.imgFisseye,
-                        height: 16.adaptSize,
-                        width: 16.adaptSize,
-                      ),
-                    ),
-                  ),
-                  suffixConstraints: BoxConstraints(maxHeight: 46.v),
-                  validator: (value) {
-                    if (value == null ||
-                        (!isValidPassword(value, isRequired: true))) {
-                      return "err_msg_please_enter_valid_password".tr;
-                    }
-                    return null;
-                  },
-                  obscureText: provider.isShowPassword);
+                ),
+                suffixConstraints: BoxConstraints(maxHeight: 46.v),
+                validator: (value) {
+                  return null;
+                },
+                // obscureText: provider.isShowPassword,
+              );
             },
           ),
         )
@@ -649,6 +591,7 @@ class ProfilescreenScreenState extends State<ProfilescreenScreen> {
       onValue.writeAsBytesSync(img.encodePng(imageDecode!));
       setState(() {
         fileImages = onValue;
+        print('THis image => $fileImages');
       });
     });
   }

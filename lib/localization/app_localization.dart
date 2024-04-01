@@ -1,3 +1,6 @@
+import 'package:delalochu/localization/am_ethio/am_Ethio_translation.dart';
+import 'package:delalochu/localization/om_Ethio/om_Ethio_translation.dart';
+
 import 'en_us/en_us_translations.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/cupertino.dart';
@@ -8,7 +11,7 @@ class AppLocalization {
 
   Locale locale;
 
-  static final Map<String, Map<String, String>> _localizedValues = {'en': enUs};
+  static final Map<String, Map<String, String>> _localizedValues = {'en': enUs, 'am': amEthio, 'da': omEthio};
 
   static AppLocalization of() {
     return Localizations.of<AppLocalization>(

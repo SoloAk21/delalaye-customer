@@ -1,5 +1,6 @@
 import 'package:delalochu/core/app_export.dart';
 import 'package:delalochu/core/utils/validation_functions.dart';
+import 'package:delalochu/localization/lang_provider.dart';
 import 'package:delalochu/widgets/custom_text_form_field.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -35,8 +36,64 @@ class LoginscreenScreenState extends State<LoginscreenScreen> {
 
   @override
   Widget build(BuildContext context) {
+    var languageProvider =
+        Provider.of<LanguageProvider>(context, listen: false);
     return Scaffold(
       resizeToAvoidBottomInset: false,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: null,
+        actions: [
+          Container(
+            margin: EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+            padding: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+            decoration: BoxDecoration(
+              color: Color(0xFFFFA05B),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.language,
+                  color: Colors.white,
+                ),
+                DropdownButtonHideUnderline(
+                  child: DropdownButton<Locale>(
+                    value: languageProvider.currentLocale,
+                    borderRadius: BorderRadius.circular(10),
+                    dropdownColor: appTheme.blueGray400,
+                    alignment: Alignment.center,
+                    iconEnabledColor: Colors.white,
+                    iconSize: 30,
+                    items: <DropdownMenuItem<Locale>>[
+                      DropdownMenuItem<Locale>(
+                        value: Locale('en', ''),
+                        child: Text('English'),
+                      ),
+                      DropdownMenuItem<Locale>(
+                        value: Locale('am', ''),
+                        child: Text('Amharic'),
+                      ),
+                      DropdownMenuItem<Locale>(
+                        value: Locale('da', ''),
+                        child: Text('Afaan Oromoo'),
+                      ),
+                      // Add more languages here as needed
+                    ],
+                    onChanged: (Locale? newLocale) {
+                      if (newLocale != null) {
+                        languageProvider.changeLanguage(newLocale);
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
       body: Form(
         key: _formKey,
         child: SizedBox(
@@ -321,7 +378,7 @@ class LoginscreenScreenState extends State<LoginscreenScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
-              'Login',
+              'lbl_login'.tr,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.white,
@@ -346,8 +403,8 @@ class LoginscreenScreenState extends State<LoginscreenScreen> {
             color: Color(0xFFFFA05B),
           ),
           Container(
-            child: const Text(
-              'Please wait...',
+            child:  Text(
+              'lbl_please_wait'.tr,
               style: TextStyle(
                 fontFamily: 'Rg',
                 color: Color(0xFFFFA05B),

@@ -39,7 +39,15 @@ class ProgressDialogUtils {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Center(child: Text(message)),
-        duration: Duration(seconds: 4), // Adjust the duration as needed
+        duration: Duration(seconds: 4),
+        backgroundColor: Colors.orange,
+        dismissDirection: DismissDirection.up,
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.only(
+            bottom: MediaQuery.of(context).size.height - 150,
+            left: 10,
+            right: 10),
+        // Adjust the duration as needed
       ),
     );
   }
