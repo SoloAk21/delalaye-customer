@@ -3,6 +3,7 @@ import 'package:delalochu/core/utils/validation_functions.dart';
 import 'package:delalochu/localization/lang_provider.dart';
 import 'package:delalochu/widgets/custom_text_form_field.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../../core/utils/progress_dialog_utils.dart';
 import '../../domain/apiauthhelpers/apiauth.dart';
@@ -40,6 +41,7 @@ class LoginscreenScreenState extends State<LoginscreenScreen> {
         Provider.of<LanguageProvider>(context, listen: false);
     return Scaffold(
       resizeToAvoidBottomInset: false,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -348,7 +350,7 @@ class LoginscreenScreenState extends State<LoginscreenScreen> {
             ProgressDialogUtils.hideProgressDialog();
             ProgressDialogUtils.showSnackBar(
               context: context,
-              message: '$res',
+              message: 'Something went wrong!',
             );
             return;
           }
@@ -403,7 +405,7 @@ class LoginscreenScreenState extends State<LoginscreenScreen> {
             color: Color(0xFFFFA05B),
           ),
           Container(
-            child:  Text(
+            child: Text(
               'lbl_please_wait'.tr,
               style: TextStyle(
                 fontFamily: 'Rg',
@@ -476,7 +478,7 @@ class LoginscreenScreenState extends State<LoginscreenScreen> {
             // SizedBox(height: 8.v),
             GestureDetector(
               onTap: () {
-                googleLogin();
+                googleLogin(context);
               },
               child: Container(
                 width: 343,
@@ -537,18 +539,22 @@ class LoginscreenScreenState extends State<LoginscreenScreen> {
     );
   }
 
-  Future<void> googleLogin() async {
+  Future<void> googleLogin(BuildContext context) async {
     final GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email']);
 
     /// Need to disconnect or cannot login with another account.
     try {
       await googleSignIn.disconnect();
     } catch (_) {
+      ProgressDialogUtils.hideProgressDialog();
       // ignore.
     }
     try {
+      ProgressDialogUtils.showProgressDialog(
+          context: context, isCancellable: false);
       var googleSignInAccount = await googleSignIn.signIn();
       if (googleSignInAccount == null) {
+        ProgressDialogUtils.hideProgressDialog();
         ProgressDialogUtils.showSnackBar(
           context: context,
           message: "Something is wrong!",
@@ -573,7 +579,21 @@ class LoginscreenScreenState extends State<LoginscreenScreen> {
           return;
         }
       }
+    } on PlatformException catch (e) {
+      ProgressDialogUtils.hideProgressDialog();
+      ProgressDialogUtils.showSnackBar(
+        context: context,
+        message: '${e.message}',
+      );
+      print('{$e.message}');
+    } on NetworkException catch (_) {
+      ProgressDialogUtils.hideProgressDialog();
+      ProgressDialogUtils.showSnackBar(
+        context: context,
+        message: 'Network Error',
+      );
     } catch (error, s) {
+      ProgressDialogUtils.hideProgressDialog();
       print('Google Signin Error => $error StackTrec: $s');
     }
   }

@@ -24,15 +24,15 @@ class ApiAuthHelper {
       var token = PrefUtils.sharedPreferences!.getString('token') ?? '';
       var userId = PrefUtils.sharedPreferences!.getInt('userId') ?? '';
       var headers = {'x-auth-token': token, 'Content-Type': 'application/json'};
-      var request =
-          http.Request('PUT', Uri.parse('$domain/api/users/profile/$userId'));
+      var request = http.Request(
+          'PUT', Uri.parse('$prodomain/api/users/profile/$userId'));
       if (isnopasandimage) {
         print('is no pass and iamge');
         request.body =
             json.encode({"fullName": username, "phone": phoneNumber});
       } else {
         if (password != '' && image == '') {
-        print(' pass and no iamge');
+          print(' pass and no iamge');
 
           request.body = json.encode({
             "fullName": username,
@@ -40,12 +40,12 @@ class ApiAuthHelper {
             "password": password
           });
         } else if (password == '' && image != '') {
-        print('is no pass and has iamge $image');
+          print('is no pass and has iamge $image');
 
           request.body = json.encode(
               {"fullName": username, "phone": phoneNumber, "photo": image});
         } else if (password != '' && image != '') {
-        print('has pass and iamge');
+          print('has pass and iamge');
 
           request.body = json.encode({
             "fullName": username,
@@ -79,7 +79,7 @@ class ApiAuthHelper {
       var token = PrefUtils.sharedPreferences!.getString('token') ?? '';
       var headers = {'Content-Type': 'application/json', 'x-auth-token': token};
       var request = http.Request(
-          'PUT', Uri.parse('$domain/api/users/rate-broker/$brokerId'));
+          'PUT', Uri.parse('$prodomain/api/users/rate-broker/$brokerId'));
       request.body = json.encode({"rating": rateValue, "comment": comment});
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
@@ -100,7 +100,7 @@ class ApiAuthHelper {
     List<Service> services = [];
     try {
       var request =
-          http.Request('GET', Uri.parse('$domain/api/broker/services'));
+          http.Request('GET', Uri.parse('$prodomain/api/broker/services'));
 
       http.StreamedResponse response = await request.send();
 
@@ -127,7 +127,7 @@ class ApiAuthHelper {
       var token = PrefUtils.sharedPreferences!.getString('token') ?? '';
       var headers = {'x-auth-token': token};
       var request = http.Request(
-          'GET', Uri.parse('$domain/api/users/request/$connectionId'));
+          'GET', Uri.parse('$prodomain/api/users/request/$connectionId'));
 
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
@@ -140,7 +140,7 @@ class ApiAuthHelper {
     } catch (e, s) {
       print('Error: $e StackTres => $s');
     }
-    print('===================> $domain/api/users/request/$connectionId');
+    print('===================> $prodomain/api/users/request/$connectionId');
     yield brokerdata;
   }
 
@@ -151,8 +151,8 @@ class ApiAuthHelper {
       var token = PrefUtils.sharedPreferences!.getString('token') ?? '';
       print('token: ' + token);
       var headers = {'x-auth-token': token};
-      var request = http.Request('GET',
-          Uri.parse('https://dev-api.delalaye.com/api/users/connection/history'));
+      var request = http.Request(
+          'GET', Uri.parse('$prodomain/api/users/connection/history'));
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
       if (response.statusCode == 200) {
@@ -177,7 +177,7 @@ class ApiAuthHelper {
       var token = PrefUtils.sharedPreferences!.getString('token') ?? '';
       var headers = {'x-auth-token': token};
       var request = http.Request(
-          'GET', Uri.parse('$domain/api/users/request/$connectionId'));
+          'GET', Uri.parse('$prodomain/api/users/request/$connectionId'));
 
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
@@ -190,7 +190,7 @@ class ApiAuthHelper {
     } catch (e, s) {
       print('Error: $e StackTres => $s');
     }
-    print('===================> $domain/api/users/request/$connectionId');
+    print('===================> $prodomain/api/users/request/$connectionId');
     return brokerdata;
   }
 
@@ -200,7 +200,7 @@ class ApiAuthHelper {
       var token = PrefUtils.sharedPreferences!.getString('token') ?? '';
       print('token =>$token ');
       var headers = {'x-auth-token': token};
-      var request = http.Request('GET', Uri.parse('$domain/api/auth/user'));
+      var request = http.Request('GET', Uri.parse('$prodomain/api/auth/user'));
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
       if (response.statusCode == 200) {
@@ -234,8 +234,8 @@ class ApiAuthHelper {
       var token = PrefUtils.sharedPreferences!.getString('token') ?? '';
       print('token ==> $token');
       var headers = {'Content-Type': 'application/json', 'x-auth-token': token};
-      var request =
-          http.Request('POST', Uri.parse('$domain/api/users/request-broker'));
+      var request = http.Request(
+          'POST', Uri.parse('$prodomain/api/users/request-broker'));
       request.body = json.encode({
         "brokerId": usreId,
         "serviceId": serviceId,
@@ -261,7 +261,7 @@ class ApiAuthHelper {
     try {
       var headers = {'Content-Type': 'application/json'};
       var request =
-          http.Request('PUT', Uri.parse('$domain/api/users/check-otp'));
+          http.Request('PUT', Uri.parse('$prodomain/api/users/check-otp'));
       request.body = json.encode({"otp": otpCode});
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
@@ -283,8 +283,8 @@ class ApiAuthHelper {
     try {
       var token = PrefUtils.sharedPreferences!.getString('token') ?? '';
       var headers = {'Content-Type': 'application/json', 'x-auth-token': token};
-      var request = http.Request(
-          'PUT', Uri.parse('$domain/api/users/connection/call/$connectionId'));
+      var request = http.Request('PUT',
+          Uri.parse('$prodomain/api/users/connection/call/$connectionId'));
       request.body = json.encode({"reason": "1"});
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
@@ -304,7 +304,7 @@ class ApiAuthHelper {
       var userId = PrefUtils.sharedPreferences!.getInt('userId') ?? '';
       var headers = {'Content-Type': 'application/json'};
       var request = http.Request(
-          'PUT', Uri.parse('$domain/api/users/reset-password/$userId'));
+          'PUT', Uri.parse('$prodomain/api/users/reset-password/$userId'));
       request.body = json.encode({"newPassword": newpassword});
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
@@ -321,8 +321,8 @@ class ApiAuthHelper {
   static Future<String> requestForResetePassword({phonenumber}) async {
     try {
       var headers = {'Content-Type': 'application/json'};
-      var request =
-          http.Request('PUT', Uri.parse('$domain/api/broker/forgot-password/'));
+      var request = http.Request(
+          'PUT', Uri.parse('$prodomain/api/broker/forgot-password/'));
       request.body = json.encode({"phone": phonenumber});
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
@@ -356,7 +356,7 @@ class ApiAuthHelper {
     try {
       var headers = {'Content-Type': 'application/json'};
       var request =
-          http.Request('POST', Uri.parse('$domain/api/auth/signup/user'));
+          http.Request('POST', Uri.parse('$prodomain/api/auth/signup/user'));
       request.body = json.encode({
         "fullName": userName,
         "password": password,
@@ -395,7 +395,7 @@ class ApiAuthHelper {
     try {
       var headers = {'Content-Type': 'application/json'};
       var request =
-          http.Request('POST', Uri.parse('$domain/api/auth/user/login'));
+          http.Request('POST', Uri.parse('$prodomain/api/auth/user/login'));
       request.body = json.encode({"phone": phoneNumber, "password": password});
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
@@ -433,8 +433,8 @@ class ApiAuthHelper {
       var token = prefs.getString('token') ?? '';
       var userId = prefs.getInt('userId') ?? '';
       var headers = {'x-auth-token': token, 'Content-Type': 'application/json'};
-      var request =
-          http.Request('POST', Uri.parse('$domain/api/broker/topup/$userId'));
+      var request = http.Request(
+          'POST', Uri.parse('$prodomain/api/broker/topup/$userId'));
       request.body = json.encode({"amount": amount});
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
@@ -468,7 +468,7 @@ class ApiAuthHelper {
     try {
       var headers = {'Content-Type': 'application/json'};
       var request = http.Request(
-          'POST', Uri.parse('$domain/api/auth/user/login/google/'));
+          'POST', Uri.parse('$prodomain/api/auth/user/login/google/'));
       request.body = json.encode({"idToken": "$accessToken"});
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
@@ -505,7 +505,7 @@ class ApiAuthHelper {
       var request = http.Request(
           'GET',
           Uri.parse(
-              'https://dev-api.delalaye.com/api/broker/filter?serviceId=$serviceId&latitude=$latitude&longitude=$longitude'));
+              '$prodomain/api/broker/filter?serviceId=$serviceId&latitude=$latitude&longitude=$longitude'));
       http.StreamedResponse response = await request.send();
       if (response.statusCode == 200) {
         final List<dynamic> responseData =
@@ -528,7 +528,7 @@ class ApiAuthHelper {
       var token = PrefUtils.sharedPreferences!.getString('token') ?? '';
       var headers = {'Content-Type': 'application/json', 'x-auth-token': token};
       var request = http.Request('PUT',
-          Uri.parse('$domain/api/users/connection/cancel/$cennectionId'));
+          Uri.parse('$prodomain/api/users/connection/cancel/$cennectionId'));
       request.body = json.encode({"reason": reason});
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
@@ -537,7 +537,7 @@ class ApiAuthHelper {
         return true;
       } else {
         print(
-            'Request for cancel is not done => $domain/api/users/connection/cancel/$cennectionId');
+            'Request for cancel is not done => $prodomain/api/users/connection/cancel/$cennectionId');
         return false;
       }
     } catch (e, s) {

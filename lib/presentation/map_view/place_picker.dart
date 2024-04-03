@@ -16,7 +16,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:inspireui/extensions/string_extension.dart';
 import 'package:location/location.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../callToBroker_Page/call_to_broker_sreen.dart';
 import '../../widgets/custom_dialog.dart';
@@ -334,7 +333,7 @@ class PlacePickerState extends State<PlacePicker> {
                   listofbrokers[i].locationLatitude ?? 0.0,
                   listofbrokers[i].locationLongtude ?? 0.0,
                 ),
-                icon:  await BitmapDescriptor.fromAssetImage(
+                icon: await BitmapDescriptor.fromAssetImage(
                   ImageConfiguration(),
                   'assets/images/markerImage.png',
                 ),
@@ -442,6 +441,11 @@ class PlacePickerState extends State<PlacePicker> {
     return WillPopScope(
       onWillPop: () async {
         if (PrefUtils.sharedPreferences!.getBool('isConnectiong') == true) {
+          ProgressDialogUtils.showSnackBar(
+            context: context,
+            message:
+                "You have requested already. Please wait for the response or cancel the request",
+          );
           return false;
         } else {
           return true;
