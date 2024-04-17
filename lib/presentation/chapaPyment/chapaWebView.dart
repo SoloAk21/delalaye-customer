@@ -54,10 +54,10 @@ class _ChapaWebViewState extends State<ChapaWebView> {
         });
         ProgressDialogUtils.showSnackBar(
           context: context,
-          message: ChapaStrings.connectionError,
+          message: ConstantStrings.connectionError,
         );
 
-        exitPaymentPage(ChapaStrings.connectionError);
+        exitPaymentPage(ConstantStrings.connectionError);
       } else if (result == ConnectivityResult.mobile) {
         setState(() {
           isOffline = false;
@@ -74,7 +74,7 @@ class _ChapaWebViewState extends State<ChapaWebView> {
         setState(() {
           isOffline = false;
         });
-        exitPaymentPage(ChapaStrings.connectionError);
+        exitPaymentPage(ConstantStrings.connectionError);
       }
     });
   }

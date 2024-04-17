@@ -123,7 +123,8 @@ class HomescreenScreenState extends State<HomescreenScreen> {
                                               .changeLanguage(newLocale);
                                         });
                                         Navigator.pop(context);
-                                        NavigatorService.pushNamed(AppRoutes.splashscreenScreen);
+                                        NavigatorService.pushNamed(
+                                            AppRoutes.splashscreenScreen);
                                       },
                                       child: Text('English'),
                                     ),
@@ -131,12 +132,12 @@ class HomescreenScreenState extends State<HomescreenScreen> {
                                       onPressed: () {
                                         setState(() {
                                           Locale newLocale = Locale("am", '');
-                                        languageProvider
-                                            .changeLanguage(newLocale);
+                                          languageProvider
+                                              .changeLanguage(newLocale);
                                         });
                                         Navigator.pop(context);
-                                        NavigatorService.pushNamed(AppRoutes.splashscreenScreen);
-
+                                        NavigatorService.pushNamed(
+                                            AppRoutes.splashscreenScreen);
                                       },
                                       child: Text('Amharic'),
                                     ),
@@ -148,8 +149,8 @@ class HomescreenScreenState extends State<HomescreenScreen> {
                                               .changeLanguage(newLocale);
                                         });
                                         Navigator.pop(context);
-                                        NavigatorService.pushNamed(AppRoutes.splashscreenScreen);
-
+                                        NavigatorService.pushNamed(
+                                            AppRoutes.splashscreenScreen);
                                       },
                                       child: Text('Afaan Oromoo'),
                                     ),
@@ -247,7 +248,7 @@ class HomescreenScreenState extends State<HomescreenScreen> {
     );
   }
 
-   var titleList = [
+  var titleList = [
     'lbl_home'.tr,
     'lbl_profile'.tr,
     'lbl_history'.tr,
@@ -327,7 +328,7 @@ class HomescreenScreenState extends State<HomescreenScreen> {
                     await Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => PlacePicker(
-                          ChapaStrings.googleApiKey,
+                          ConstantStrings.googleApiKey,
                           '${index += 1}',
                         ),
                       ),
@@ -343,7 +344,7 @@ class HomescreenScreenState extends State<HomescreenScreen> {
                     ),
                     child: Center(
                       child: CustomImageView(
-                        margin: EdgeInsets.only(top:1),
+                        margin: EdgeInsets.only(top: 1),
                         imagePath: listOfImage[index],
                         color: Color(0xFFFFA05B),
                         // height: 64.v,

@@ -21,6 +21,9 @@ import '../callToBroker_Page/call_to_broker_sreen.dart';
 import '../../widgets/custom_dialog.dart';
 import 'model/broker_info_model.dart';
 import 'model/check_request_usingConnection.dart';
+import 'package:html/parser.dart' show parse;
+
+import 'model/terms_condition_Model.dart';
 
 /// A UUID generator.
 ///
@@ -309,7 +312,6 @@ class PlacePickerState extends State<PlacePicker> {
     print('ServiceId => ${widget.selectedserviceId} $latitude $longitude');
     setState(() {
       PrefUtils.sharedPreferences!.setBool('isConnectiong', false);
-
       isConnectiong = false;
       isBrokerSelected = false;
     });
@@ -1092,7 +1094,6 @@ class PlacePickerState extends State<PlacePicker> {
       onPressed: () async {
         PrefUtils.sharedPreferences!.setString('fullname', fullname);
         PrefUtils.sharedPreferences!.setDouble('rate', rate.toDouble());
-        print('rate is ============== $rate');
         if (isCheckedtersm) {
           ProgressDialogUtils.showProgressDialog(
             context: context,
@@ -1107,9 +1108,6 @@ class PlacePickerState extends State<PlacePicker> {
             locationLongtude: locationLongtude,
           );
           if (response.length > 0 && response[0].id != null) {
-            print('================================');
-            print('Connection Id is not null');
-            print('================================');
             connectionId = response[0].id;
             isConnectiong = true;
             PrefUtils.sharedPreferences!.setInt('connectionId', connectionId!);
@@ -1121,9 +1119,6 @@ class PlacePickerState extends State<PlacePicker> {
             setState(() {});
             ProgressDialogUtils.hideProgressDialog();
           } else {
-            print('================================');
-            print('Connection Id is => null');
-            print('================================');
             ProgressDialogUtils.hideProgressDialog();
             return;
           }
@@ -1556,26 +1551,107 @@ class PrivacyTermScreen extends StatefulWidget {
 }
 
 class PrivacyTermScreenState extends State<PrivacyTermScreen> {
+  List<String> orotermsAndCondtion = [
+    'Appii Dallaalaa buufachuu fi itti fayyadamuudhaan, haalawwanii fi dambiiwwan kana akka eegdu beekta, akkasumas walii galtee qabda.',
+    'Appiin Dallaalaa odeeffannoo qofaaf kan kenname yoo ta’u, odeeffannoon kenname akka gorsa faayinaansiitti ilaalamuu hin qabu. Fayyadamtoonni murtii invastimantii isaaniif itti gaafatamummaa qofa kan qaban yoo ta’u, yeroo barbaachisaa ta’etti gorsa ogeessaa barbaaduu qabu.',
+    'Appiin Dallaalaa tajaajila faayinaansii fi waltajjiiwwan qaama sadaffaa fayyadamuu ni danda’a. Sirrummaa, amanamummaa, ykn mijachuu tajaajila qaama sadaffaa kamiyyuu hin raggaasifnu ykn hin mirkaneessinu. Fayyadamtoonni tajaajila qaama sadaffaa akkasii fayyadamuu isaanii dura haalawwanii fi dambiiwwan akka ilaalanii fi fudhatan gorfama.',
+    'Nageenyi mirkaneessitoota akkaawuntii fayyadamaa kan akka maqaa fayyadamaa fi jechoota icciitii itti gaafatamummaa fayyadamaati. odeeffannoo herrega isaanii eeguu Fayyadamtoonni tarkaanfiiwwan sirriitti fudhachuu qabu, akkasumas f hayyama malee seenamuu ykn sochii shakkisiisaa kamiyyuu hatattamaan gabaasuu.',
+    'Appiin Dallaalaa muuxannoo fayyadamaa guddisuu fi odeeffannoo dhuunfaa hin taane walitti qabuuf cookies ykn teeknooloojiiwwan kana fakkaatan fayyadamuu ni danda’a. Appicha fayyadamuudhaan, akkaataa Imaammata Dhuunfaa keenya keessatti ibsametti kukiiwwanii fi teeknooloojiiwwan akkasii akka fayyadamaniif hayyama kenniteetta.',
+  ];
+  List<String> entermsAndCondtion = [
+    'By downloading and using the broker app, you acknowledge and agree to comply with these terms and conditions.',
+    'The broker app is provided for informational purposes only, and the information provided should not be considered as financial advice. Users are solely responsible for their investment decisions and should seek professional advice when needed.',
+    'The broker app may provide access to third-party financial services and platforms. We do not endorse or guarantee the accuracy, reliability, or suitability of any third-party services or platforms. Users are advised to review and accept the terms and conditions of such third-party services before using them.',
+    'The security of user account credentials, such as usernames and passwords, is the user\'s responsibility. Users must take appropriate measures to protect their account information and promptly report any unauthorized access or suspicious activities.',
+    'The broker app may use cookies or similar technologies to enhance user experience and collect non-personal information. By using the app, you consent to the use of such cookies and technologies as outlined in our Privacy Policy.',
+  ];
+  List<String> amtermsAndCondtion = [
+    'የደላላዬ አፕ በማውረድ እና በመጠቀም እነዚህን የውል ሁኔታዎች እና ድንጋጌዎች ለማክበር መስማማትዎን ያረጋግጣሉ፡፡',
+    'የደላላዬ አፕ ለመረጃ ዓላማ ብቻ የቀረበ ሲሆን የቀረበው መረጃ እንደ ፋይናንስ ነክ ምክር ተደርጎ ሊቆጠር አይገባም ተጠቃሚዎች ለኢንቨስትመንት ውሳኔዎቻቸው ብቻ ኃላፊነት የሚወስዱ ከመሆናቸው ባሻገር እንደየአስፈካጊነቱ የሙያተኛ ምክር ሊጠይቁ ይገባል፡፡',
+    'የደላላዬ አፕ ከ3ኛ ወገን የፋይናንስ አገልግሎቶች እና አውታሮች ጋር ሊገናኙት  ይችላል፡፡ የ3ኛ ወገን  የፋይናንስ አገልግሎቶች እና አውታሮችን በሚመለከት ስለ ትክክለኛነታቸው፣ ስለአስተማማኝታቸው እና ስለተገቢነታቸቸው ማረጋገጫ አንሰጥም፡፡ ተጠቃሚዎች የ3ኛ ወገን አገልግሎቶችን ከመጠቀማቸው አስቀድመው የውል ሁኔታዎችን  እና ድንጋጌዎችን ማንበብ እና መቀበላቸው ማረጋገጥ ይጠበቅባቸዋል፡፡',
+    'እንደ ተጠቃሚ ስም እና ሚስጥራዊ ቁጥር ያሉ የተጠቃሚ አካውንት መረጃዎ የተጠቃሚው ኃላፊነት ናቸው ተጠቃሚዎች የአካውንቶቻቸውን መረጃ ለመጠበቅ ጥንቃቅ ማድረግ እና ያለፈቃድ የሚደረጉ መግባቶች ሲኖሩ ወይም አጠራጣሪ ተግባራት ሲያጋጥሙ ወዲያውኑ ሪፖርት ማድረግና እርምጃ መውሰድ ይኖርባቸዋል፤',
+    'የደላላዬ አፕ የተለያዩ የግንኙነት መራ (ኮኪ) ወይም ተመሳሳይ ቴክኖሎጂዎችን በመጠቀም የደንበኛችን ግላዊ ያልሆኑ መረጃዎችን ጥቅም ላይ በማዋል አገልግሎቱን ያሳልጣል፡፡ የደላላዬ አፕ በመጠቀምዎ የቴክኖሎጂ አጠቃቀም እና የግላዊ መረጃ ፖሊሲችንን ለማክበር መስማማቱን ያረጋግጣሉ፡፡ ',
+  ];
   @override
   Widget build(BuildContext context) {
+    int number = 1;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Our term and condition'),
+        leading: IconButton(
+          onPressed: () {
+            NavigatorService.goBack();
+          },
+          icon: Icon(
+            Icons.arrow_back_ios,
+            color: Colors.white,
+          ),
+        ),
+        title: Text(
+          PrefUtils.sharedPreferences?.getString('language_code') == 'en'
+              ? 'Our term and condition'
+              : PrefUtils.sharedPreferences?.getString('language_code') == 'am'
+                  ? 'የውል ሁኔታዎ እና ድንጋጌዎች'
+                  : 'Haalawwanii fi Dambiiwwan keenya',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+        ),
+        backgroundColor: appTheme.orangeA200,
+        elevation: 0,
       ),
-      body: Container(
-        child: RichText(
-          text: TextSpan(
-            text: 'By ',
-            children: [
-              TextSpan(
-                text:
-                    'By downloading and using the broker app, you acknowledge and agree to comply with these terms and conditions.',
-              )
-            ],
+      body: SingleChildScrollView(
+        child: Container(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+            child: Column(
+              children: [
+                for (int i = 0; i < entermsAndCondtion.length; i++) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "${number++}.",
+                        style: theme.textTheme.bodyLarge!.copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black54,
+                        ),
+                      ),
+                      SizedBox(width: 5),
+                      Expanded(
+                        child: Text(
+                          PrefUtils.sharedPreferences
+                                      ?.getString('language_code') ==
+                                  'en'
+                              ? entermsAndCondtion[i]
+                              : PrefUtils.sharedPreferences
+                                          ?.getString('language_code') ==
+                                      'am'
+                                  ? amtermsAndCondtion[i]
+                                  : orotermsAndCondtion[i],
+                          style: theme.textTheme.bodyLarge!.copyWith(
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black54,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 15),
+                ],
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  //Convert Html to simple String
+  static String parseHtmlString(String htmlString) {
+    final document = parse(htmlString);
+    final String parsedString =
+        parse(document.body!.text).documentElement!.text;
+
+    return parsedString;
   }
 }
 
