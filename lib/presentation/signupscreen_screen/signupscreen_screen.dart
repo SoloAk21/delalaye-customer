@@ -58,9 +58,10 @@ class SignupscreenScreenState extends State<SignupscreenScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         CustomImageView(
-                            imagePath: ImageConstant.imgImage190x258,
-                            width: 258.h,
-                            alignment: Alignment.center),
+                          imagePath: ImageConstant.imgImage190x258,
+                          width: 258.h,
+                          alignment: Alignment.center,
+                        ),
                         SizedBox(height: 17.v),
                         Align(
                           alignment: Alignment.center,

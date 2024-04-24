@@ -7,18 +7,18 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:500749420107:android:c1394bf3893c003c362fce",
+        "mobilesdk_app_id": "1:500749420107:android:293a0f3558d07904362fce",
         "android_client_info": {
-          "package_name": "com.delalayecustomer.app"
+          "package_name": "com.delalayebroker.app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "500749420107-lntktjcah9o42p2ekqtnu802s7cohago.apps.googleusercontent.com",
+          "client_id": "500749420107-jtiv79qka721bquh5s533gkvaj5ds4vf.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.delalayecustomer.app",
-            "certificate_hash": "2a26248778753770dead5bd237ca56c6279286dd"
+            "package_name": "com.delalayebroker.app",
+            "certificate_hash": "6a440bac229281f93d7dcffb05915abed8fc20f4"
           }
         },
         {
@@ -51,18 +51,18 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:500749420107:android:22095dfcd6045f61362fce",
+        "mobilesdk_app_id": "1:500749420107:android:c1394bf3893c003c362fce",
         "android_client_info": {
-          "package_name": "com.delalochu.app"
+          "package_name": "com.delalayecustomer.app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "500749420107-6of4vtvaqh47flr70s9u5la2kgfv0ah5.apps.googleusercontent.com",
+          "client_id": "500749420107-9d3n5nccdabls8p1sokihdcpmg7boh1v.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.delalochu.app",
-            "certificate_hash": "2a26248778753770dead5bd237ca56c6279286dd"
+            "package_name": "com.delalayecustomer.app",
+            "certificate_hash": "bc5962f4826852e1e7359bbd439bc6762bb7cfa2"
           }
         },
         {
