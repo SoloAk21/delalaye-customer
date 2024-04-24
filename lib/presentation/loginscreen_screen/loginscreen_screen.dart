@@ -540,61 +540,72 @@ class LoginscreenScreenState extends State<LoginscreenScreen> {
   }
 
   Future<void> googleLogin(BuildContext context) async {
-    final GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email']);
+    if (await NetworkInfo().isConnected()) {
+      final GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email']);
 
-    /// Need to disconnect or cannot login with another account.
-    try {
-      await googleSignIn.disconnect();
-    } catch (_) {
-      ProgressDialogUtils.hideProgressDialog();
-      // ignore.
-    }
-    try {
-      ProgressDialogUtils.showProgressDialog(
-          context: context, isCancellable: false);
-      var googleSignInAccount = await googleSignIn.signIn();
-      if (googleSignInAccount == null) {
+      try {
+        await googleSignIn.disconnect();
+      } catch (_) {
+        // ignore.
+      }
+      try {
+        ProgressDialogUtils.showProgressDialog(
+          context: context,
+          isCancellable: false,
+        );
+        var googleSignInAccount = await googleSignIn.signIn();
+        if (googleSignInAccount == null) {
+          ProgressDialogUtils.hideProgressDialog();
+          ProgressDialogUtils.showSnackBar(
+            context: context,
+            message: "Something is wrong!",
+          );
+        } else {
+          var auth = await googleSignInAccount.authentication;
+          var res =
+              await ApiAuthHelper.googleSignIn(accessToken: auth.accessToken!);
+          if (res == '') {
+            ProgressDialogUtils.hideProgressDialog();
+            onTapLogin(context);
+            ProgressDialogUtils.showSnackBar(
+              context: context,
+              message: 'You have successfully logged in',
+            );
+          } else {
+            ProgressDialogUtils.hideProgressDialog();
+            ProgressDialogUtils.showSnackBar(
+              context: context,
+              message: '$res',
+            );
+            return;
+          }
+        }
+      } on PlatformException catch (e) {
         ProgressDialogUtils.hideProgressDialog();
         ProgressDialogUtils.showSnackBar(
           context: context,
-          message: "Something is wrong!",
+          message: '${e.message}',
         );
-      } else {
-        var auth = await googleSignInAccount.authentication;
-        var res =
-            await ApiAuthHelper.googleSignIn(accessToken: auth.accessToken!);
-        if (res == '') {
-          ProgressDialogUtils.hideProgressDialog();
-          onTapLogin(context);
-          ProgressDialogUtils.showSnackBar(
-            context: context,
-            message: 'You have successfully logged in',
-          );
-        } else {
-          ProgressDialogUtils.hideProgressDialog();
-          ProgressDialogUtils.showSnackBar(
-            context: context,
-            message: '$res',
-          );
-          return;
-        }
+        print('${e.message}');
+      } on NetworkException catch (_) {
+        ProgressDialogUtils.hideProgressDialog();
+        ProgressDialogUtils.showSnackBar(
+          context: context,
+          message: 'Network Error',
+        );
+      } catch (error, s) {
+        ProgressDialogUtils.hideProgressDialog();
+        ProgressDialogUtils.showSnackBar(
+          context: context,
+          message: '$error',
+        );
+        print('Google Signin Error => $error StackTrec: $s');
       }
-    } on PlatformException catch (e) {
-      ProgressDialogUtils.hideProgressDialog();
+    } else {
       ProgressDialogUtils.showSnackBar(
         context: context,
-        message: '${e.message}',
+        message: 'There is no Internet connection, please try again',
       );
-      print('{$e.message}');
-    } on NetworkException catch (_) {
-      ProgressDialogUtils.hideProgressDialog();
-      ProgressDialogUtils.showSnackBar(
-        context: context,
-        message: 'Network Error',
-      );
-    } catch (error, s) {
-      ProgressDialogUtils.hideProgressDialog();
-      print('Google Signin Error => $error StackTrec: $s');
     }
   }
 

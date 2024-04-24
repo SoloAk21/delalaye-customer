@@ -50,6 +50,7 @@ class ProfilescreenScreenState extends State<ProfilescreenScreen> {
 
   @override
   Widget build(BuildContext context) {
+    var filename = DateTime.now().toIso8601String();
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: _buildAppBar(context),
@@ -68,7 +69,7 @@ class ProfilescreenScreenState extends State<ProfilescreenScreen> {
                 Uint8List decodedBytes = ImageTools.decodeBase64ToUint8List(
                     value.brokerData.user!.photo ?? '');
                 var oldfileImag = await ImageTools.writeToFile(decodedBytes,
-                    fileName: "decoded_image", fileExtension: "png");
+                    fileName: filename + "decoded_image", fileExtension: "png");
                 setState(() {
                   oldfileImages = oldfileImag;
                 });
@@ -191,7 +192,7 @@ class ProfilescreenScreenState extends State<ProfilescreenScreen> {
                     SizedBox(height: 15.v),
                     _buildPhoneNumber(context, value),
                     SizedBox(height: 15.v),
-                   // _buildPassword(context, value),
+                    // _buildPassword(context, value),
                     SizedBox(height: 333.v),
                     Align(
                       alignment: Alignment.centerLeft,
@@ -223,15 +224,16 @@ class ProfilescreenScreenState extends State<ProfilescreenScreen> {
                               ProgressDialogUtils.showSnackBar(
                                 context: context,
                                 message:
-                                    'lbl_you_have_successfully_updated_your_profile'.tr,
-                               // duration: 2,
+                                    'lbl_you_have_successfully_updated_your_profile'
+                                        .tr,
+                                // duration: 2,
                               );
                             } else {
                               ProgressDialogUtils.hideProgressDialog();
                               ProgressDialogUtils.showSnackBar(
                                 context: context,
                                 message: 'something went wrong',
-                              //  duration: 2,
+                                //  duration: 2,
                               );
                             }
                           } else {
@@ -254,15 +256,16 @@ class ProfilescreenScreenState extends State<ProfilescreenScreen> {
                               ProgressDialogUtils.showSnackBar(
                                 context: context,
                                 message:
-                                    'lbl_you_have_successfully_updated_your_profile'.tr,
-                               // duration: 2,
+                                    'lbl_you_have_successfully_updated_your_profile'
+                                        .tr,
+                                // duration: 2,
                               );
                             } else {
                               ProgressDialogUtils.hideProgressDialog();
                               ProgressDialogUtils.showSnackBar(
                                 context: context,
                                 message: 'something went wrong',
-                               // duration: 2,
+                                // duration: 2,
                               );
                             }
                           }
@@ -437,60 +440,6 @@ class ProfilescreenScreenState extends State<ProfilescreenScreen> {
                   }
                   return null;
                 },
-              );
-            },
-          ),
-        )
-      ],
-    );
-  }
-
-  /// Section Widget
-  Widget _buildPassword(BuildContext context, ProfilescreenProvider value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-            padding: EdgeInsets.only(left: 3.h),
-            child: Text("lbl_bio".tr,
-                style: TextStyle(
-                    color: appTheme.blueGray400,
-                    fontSize: 14.fSize,
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w400))),
-        SizedBox(height: 10.v),
-        Padding(
-          padding: EdgeInsets.only(left: 3.h),
-          child: Consumer<ProfilescreenProvider>(
-            builder: (context, provider, child) {
-              return CustomTextFormField(
-                onChanged: (p0) => password = p0,
-                contentPadding: EdgeInsets.symmetric(horizontal: 10),
-                maxLines: 5,
-                hintText: "lbl_type_about_yourself".tr,
-                textInputAction: TextInputAction.done,
-                textInputType: TextInputType.text,
-                textStyle: TextStyle(color: Colors.black),
-                hintStyle: TextStyle(),
-                prefixConstraints: BoxConstraints(maxHeight: 46.v),
-                suffix: InkWell(
-                  // onTap: () {
-                  //   provider.changePasswordVisibility();
-                  // },
-                  child: Container(
-                    margin: EdgeInsets.fromLTRB(30.h, 15.v, 8.h, 15.v),
-                    child: CustomImageView(
-                      imagePath: ImageConstant.imgEdit,
-                      height: 16.adaptSize,
-                      width: 16.adaptSize,
-                    ),
-                  ),
-                ),
-                suffixConstraints: BoxConstraints(maxHeight: 46.v),
-                validator: (value) {
-                  return null;
-                },
-                // obscureText: provider.isShowPassword,
               );
             },
           ),

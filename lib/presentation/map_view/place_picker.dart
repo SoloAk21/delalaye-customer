@@ -23,8 +23,6 @@ import 'model/broker_info_model.dart';
 import 'model/check_request_usingConnection.dart';
 import 'package:html/parser.dart' show parse;
 
-import 'model/terms_condition_Model.dart';
-
 /// A UUID generator.
 ///
 /// This will generate unique IDs in the format:
@@ -328,46 +326,44 @@ class PlacePickerState extends State<PlacePicker> {
       if (listofbrokers.length > 0) {
         for (var i = 0; i < listofbrokers.length; i++) {
           // here you must check the broker is online or not,then add it to the list
-          if (listofbrokers[i].avilableForWork == true) {
-            marker.add(
-              Marker(
-                position: LatLng(
-                  listofbrokers[i].locationLatitude ?? 0.0,
-                  listofbrokers[i].locationLongtude ?? 0.0,
-                ),
-                icon: await BitmapDescriptor.fromAssetImage(
-                  ImageConfiguration(),
-                  'assets/images/markerImage.png',
-                ),
-                markerId: MarkerId('${listofbrokers[i].id}'),
-                onTap: () {
-                  if (PrefUtils.sharedPreferences!.getBool('isConnectiong') ==
-                      true) {
-                    print('hi ');
 
-                    ProgressDialogUtils.showSnackBar(
-                        context: context,
-                        message:
-                            "You have requested already. Please wait for the response or cancel the request");
-                  } else {
-                    print('hii ');
-
-                    setState(() {
-                      fullname = listofbrokers[i].fullName ?? "";
-                      rate = listofbrokers[i].rate ?? 0;
-                      hasCar = listofbrokers[i].hasCar ?? false;
-                      selectedbrokerId = listofbrokers[i].id.toString();
-                      phoneNumber = listofbrokers[i].phone ?? "";
-                      isBrokerSelected = true;
-                    });
-                  }
-                },
-                infoWindow: InfoWindow(
-                  title: '${listofbrokers[i].fullName}',
-                ),
+          marker.add(
+            Marker(
+              position: LatLng(
+                listofbrokers[i].locationLatitude ?? 0.0,
+                listofbrokers[i].locationLongtude ?? 0.0,
               ),
-            );
-          }
+              icon: await BitmapDescriptor.fromAssetImage(
+                ImageConfiguration(),
+                'assets/images/markerImage.png',
+              ),
+              markerId: MarkerId('${listofbrokers[i].id}'),
+              onTap: () {
+                if (PrefUtils.sharedPreferences!.getBool('isConnectiong') ==
+                    true) {
+                  print('hi ');
+
+                  ProgressDialogUtils.showSnackBar(
+                      context: context,
+                      message:
+                          "You have requested already. Please wait for the response or cancel the request");
+                } else {
+                  print('hii ');
+                  setState(() {
+                    fullname = listofbrokers[i].fullName ?? "";
+                    rate = listofbrokers[i].rate ?? 0;
+                    hasCar = listofbrokers[i].hasCar ?? false;
+                    selectedbrokerId = listofbrokers[i].id.toString();
+                    phoneNumber = listofbrokers[i].phone ?? "";
+                    isBrokerSelected = true;
+                  });
+                }
+              },
+              infoWindow: InfoWindow(
+                title: '${listofbrokers[i].fullName}',
+              ),
+            ),
+          );
         }
         ProgressDialogUtils.hideProgressDialog();
         setState(() {
@@ -417,14 +413,11 @@ class PlacePickerState extends State<PlacePicker> {
       latitude: '',
       longitude: '',
     );
-    //  initPrefs();
     PrefUtils().init();
     _requestStreamController =
         StreamController<CheckForCustomerRequestModel>.broadcast();
     super.initState();
   }
-
-  bool _initialized = false;
 
   @override
   void dispose() {

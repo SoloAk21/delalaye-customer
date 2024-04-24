@@ -1,14 +1,9 @@
 import 'dart:io';
 
 import 'package:delalochu/core/app_export.dart';
-import 'package:delalochu/core/utils/image_tools.dart';
 import 'package:delalochu/core/utils/validation_functions.dart';
-import 'package:delalochu/presentation/signupscreen_screen/models/signupscreen_model.dart';
-import 'package:image/image.dart' as img;
 import 'package:delalochu/widgets/custom_text_form_field.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:universal_platform/universal_platform.dart';
 import '../../core/utils/progress_dialog_utils.dart';
 import '../../domain/apiauthhelpers/apiauth.dart';
 import 'provider/signupscreen_provider.dart';
@@ -253,118 +248,10 @@ class SignupscreenScreenState extends State<SignupscreenScreen> {
   }
 
 // show the image picker options
-  void _showOption(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return Container(
-          padding:
-              const EdgeInsets.only(bottom: 150, left: 100, right: 1, top: 20),
-          child: Wrap(
-            children: <Widget>[
-              GestureDetector(
-                onTap: () {
-                  Navigator.pop(context);
-                  _getImageFromGallery();
-                },
-                child: const Column(
-                  children: <Widget>[
-                    Icon(
-                      Icons.image,
-                      size: 60,
-                    ),
-                    Text(
-                      'Gallery',
-                      style: TextStyle(fontWeight: FontWeight.w300),
-                    )
-                  ],
-                ),
-              ),
-              const SizedBox(
-                width: 30,
-              ),
-              GestureDetector(
-                onTap: () {
-                  Navigator.pop(context);
-                  _getImageFromCamera();
-                },
-                child: const Column(
-                  children: <Widget>[
-                    Icon(
-                      Icons.camera_alt,
-                      size: 60,
-                    ),
-                    Text(
-                      'Camera',
-                      style: TextStyle(fontWeight: FontWeight.w300),
-                    )
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
 // from camera
-  Future _getImageFromCamera() async {
-    var pickedFile = await ImagePicker().pickImage(
-      source: ImageSource.camera,
-      maxWidth: 512,
-      maxHeight: 512,
-      imageQuality: 70,
-    );
-    if (pickedFile == null) {
-      return;
-    }
-
-    var image = File(pickedFile.path);
-
-    var path = image.path;
-    var imageDecode = img.decodeImage(image.readAsBytesSync());
-
-    path = '${path.substring(0, path.lastIndexOf('.'))}.png';
-    await image.rename(path).then((onValue) {
-      onValue.writeAsBytesSync(img.encodePng(imageDecode!));
-      setState(() {
-        fileImages = onValue;
-      });
-    });
-  }
 
 // from gallery
-  Future _getImageFromGallery() async {
-    var pickedFile = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 512,
-      maxHeight: 512,
-      imageQuality: 70,
-    );
-    if (pickedFile == null) {
-      return;
-    }
-
-    var image = File(pickedFile.path);
-
-    if (UniversalPlatform.isIOS) {
-      var path = image.path;
-      var imageDecode = img.decodeImage(image.readAsBytesSync());
-
-      path = '${path.substring(0, path.lastIndexOf('.'))}.png';
-      await image.rename(path).then((onValue) {
-        onValue.writeAsBytesSync(img.encodePng(imageDecode!));
-        setState(() {
-          fileImages = onValue;
-        });
-      });
-    } else {
-      setState(() {
-        fileImages = image;
-      });
-    }
-  }
 
   /// Section Widget
   Widget _buildUserName(BuildContext context) {

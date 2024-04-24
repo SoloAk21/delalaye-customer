@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:delalochu/presentation/profilescreen_screen/models/profilescreen_model.dart';
 
-import '../../../data/models/userModel/userModel.dart';
 import '../../../domain/apiauthhelpers/apiauth.dart';
 import '../models/user_model.dart';
 

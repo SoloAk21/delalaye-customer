@@ -2,14 +2,12 @@ import 'dart:io';
 
 import 'package:delalochu/core/app_export.dart';
 import 'package:delalochu/core/utils/image_tools.dart';
-import 'package:delalochu/localization/lang_provider.dart';
 import 'package:delalochu/presentation/forgotPassword/models/otpCodeModel.dart';
 import 'package:delalochu/presentation/signupscreen_screen/models/signupscreen_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import '../../core/utils/progress_dialog_utils.dart';
-import '../../core/utils/validation_functions.dart';
 import '../../domain/apiauthhelpers/apiauth.dart';
 import '../../widgets/custom_text_form_field.dart';
 import '../signupscreen_screen/provider/signupscreen_provider.dart';

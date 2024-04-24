@@ -261,9 +261,9 @@ class HomescreenScreenState extends State<HomescreenScreen> {
     'lbl_house_rent'.tr,
     'lbl_car_sale'.tr,
     'lbl_car_rent'.tr,
-    'lbl_real_state'.tr,
+    // 'lbl_real_state'.tr,
     'lbl_house_maid'.tr,
-    'lbl_skilled_worker'.tr,
+    // 'lbl_skilled_worker'.tr,
     'lbl_used_items'.tr,
     // 'lbl_others'.tr,
   ];
@@ -272,9 +272,9 @@ class HomescreenScreenState extends State<HomescreenScreen> {
     ImageConstant.rentHome,
     ImageConstant.car,
     ImageConstant.car,
-    ImageConstant.building,
+    // ImageConstant.building,
     ImageConstant.maid,
-    ImageConstant.mechanic,
+    // ImageConstant.mechanic,
     ImageConstant.furniture,
     // ImageConstant.more,
   ];
@@ -355,13 +355,16 @@ class HomescreenScreenState extends State<HomescreenScreen> {
                 ),
               ),
               Expanded(
-                child: Text(
-                  listofImageName[index],
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 14,
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w600,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 10.0),
+                  child: Text(
+                    listofImageName[index],
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 14,
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),

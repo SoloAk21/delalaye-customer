@@ -466,6 +466,7 @@ class ApiAuthHelper {
     required String accessToken,
   }) async {
     try {
+      // print('object ======> $accessToken');
       var headers = {'Content-Type': 'application/json'};
       var request = http.Request(
           'POST', Uri.parse('$prodomain/api/auth/user/login/google/'));
@@ -500,12 +501,18 @@ class ApiAuthHelper {
 
   static Future<List<BrokerInfo>> fetchBrokerData(
       {latitude, longitude, serviceId}) async {
+    print('================================here is a service');
     var brokerInfo = <BrokerInfo>[];
     try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      var token = prefs.getString('token') ?? '';
+      var headers = {'x-auth-token': token};
       var request = http.Request(
           'GET',
           Uri.parse(
               '$prodomain/api/broker/filter?serviceId=$serviceId&latitude=$latitude&longitude=$longitude'));
+      request.headers.addAll(headers);
+
       http.StreamedResponse response = await request.send();
       if (response.statusCode == 200) {
         final List<dynamic> responseData =
@@ -515,10 +522,15 @@ class ApiAuthHelper {
             brokerInfo.add(BrokerInfo.fromJson(item));
           }
         }
+        print('====================200============> $brokerInfo');
+      } else {
+        print(
+            '================={}=== not 200 ============> $brokerInfo ${response.statusCode} ${response.reasonPhrase}');
       }
     } catch (e, s) {
       printLog('fetchBrokerData Exception: $e' 'StackTrace:' '$s');
     }
+    print('================================> $brokerInfo');
     return brokerInfo;
   }
 

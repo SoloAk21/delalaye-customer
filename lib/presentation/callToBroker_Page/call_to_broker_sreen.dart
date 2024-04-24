@@ -379,13 +379,13 @@ class _AllBrokerInfoState extends State<AllBrokerInfo> {
   /// drawer widget
   Drawer drawer() {
     var titleList = [
-    'lbl_home'.tr,
-    'lbl_profile'.tr,
-    'lbl_history'.tr,
-    'lbl_rate_app'.tr,
-    'lbl_language'.tr,
-    'lbl_logout'.tr,
-  ];
+      'lbl_home'.tr,
+      'lbl_profile'.tr,
+      'lbl_history'.tr,
+      'lbl_rate_app'.tr,
+      'lbl_language'.tr,
+      'lbl_logout'.tr,
+    ];
     return Drawer(
       child: SingleChildScrollView(
         child: Container(

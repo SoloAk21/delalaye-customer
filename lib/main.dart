@@ -46,7 +46,7 @@ class MyApp extends StatelessWidget {
             ChangeNotifierProvider(create: (_) => LanguageProvider()),
             ChangeNotifierProvider(create: (context) => ThemeProvider()),
           ],
-          child:  Consumer2<ThemeProvider, LanguageProvider>(
+          child: Consumer2<ThemeProvider, LanguageProvider>(
             builder: (context, provider, languageProvider, child) {
               print('currentLocale ${languageProvider.currentLocale}');
               return MaterialApp(
@@ -65,7 +65,10 @@ class MyApp extends StatelessWidget {
                   Locale('am', ''),
                   Locale('da', ''),
                 ],
-                locale:Locale(PrefUtils.sharedPreferences?.getString('language_code') ?? 'en','') ,
+                locale: Locale(
+                    PrefUtils.sharedPreferences?.getString('language_code') ??
+                        'en',
+                    ''),
                 initialRoute: AppRoutes.initialRoute,
                 routes: AppRoutes.routes,
               );
