@@ -14,8 +14,8 @@ import '../../core/utils/pref_utils.dart';
 import '../../presentation/homescreen_screen/models/connectionhistoryModel.dart';
 
 class ApiAuthHelper {
-  static var domain = "https://dev-api.delalaye.com";
   static var prodomain = "https://api.delalaye.com";
+  static var devdomain = "https://dev-api.delalaye.com";
 
   static Future<bool> updateProfile(
       {username, phoneNumber, password, image, isnopasandimage}) async {
@@ -267,9 +267,8 @@ class ApiAuthHelper {
       http.StreamedResponse response = await request.send();
       if (response.statusCode == 200) {
         var res = await response.stream.bytesToString();
-        print('this response => $res');
         var jsonResponse = json.decode(res);
-        if (jsonResponse['broker'] != null) {
+        if (jsonResponse['user'] != null) {
           return true;
         }
       }
@@ -302,15 +301,25 @@ class ApiAuthHelper {
   static Future<bool> changePassword({newpassword}) async {
     try {
       var userId = PrefUtils.sharedPreferences!.getInt('userId') ?? '';
-      var headers = {'Content-Type': 'application/json'};
-      var request = http.Request(
-          'PUT', Uri.parse('$prodomain/api/users/reset-password/$userId'));
-      request.body = json.encode({"newPassword": newpassword});
-      request.headers.addAll(headers);
-      http.StreamedResponse response = await request.send();
-      if (response.statusCode == 200) {
-        print(await response.stream.bytesToString());
-        return true;
+      if (userId != '') {
+        var headers = {'Content-Type': 'application/json'};
+        var request = http.Request(
+            'PUT', Uri.parse('$prodomain/api/users/reset-password/$userId'));
+        request.body = json.encode({"newPassword": newpassword});
+        request.headers.addAll(headers);
+        http.StreamedResponse response = await request.send();
+        if (response.statusCode == 200) {
+          print(await response.stream.bytesToString());
+          return true;
+        } else {
+          print(
+              ' print(await response.stream.bytesToString()); ==> ${await response.stream.bytesToString()}');
+          print(
+              ' print(await response.stream.bytesToString()); ==> ${response.statusCode}');
+        }
+      } else {
+        print(
+            ' print(await response.stream.bytesToString()); ==> user Id is null ');
       }
     } catch (e, s) {
       print('changePassword Error: $e StackTres => $s');
@@ -322,7 +331,7 @@ class ApiAuthHelper {
     try {
       var headers = {'Content-Type': 'application/json'};
       var request = http.Request(
-          'PUT', Uri.parse('$prodomain/api/broker/forgot-password/'));
+          'PUT', Uri.parse('$prodomain/api/users/forgot-password/'));
       request.body = json.encode({"phone": phonenumber});
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
@@ -501,7 +510,8 @@ class ApiAuthHelper {
 
   static Future<List<BrokerInfo>> fetchBrokerData(
       {latitude, longitude, serviceId}) async {
-    print('================================here is a service');
+    print(
+        '================================> here is a fetchBrokerData API function');
     var brokerInfo = <BrokerInfo>[];
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -522,15 +532,15 @@ class ApiAuthHelper {
             brokerInfo.add(BrokerInfo.fromJson(item));
           }
         }
-        print('====================200============> $brokerInfo');
+        print(
+            '================================> here is a fetchBrokerData response.statusCode == 200');
       } else {
         print(
-            '================={}=== not 200 ============> $brokerInfo ${response.statusCode} ${response.reasonPhrase}');
+            '==========================> $brokerInfo ${response.statusCode} ${response.reasonPhrase}');
       }
     } catch (e, s) {
       printLog('fetchBrokerData Exception: $e' 'StackTrace:' '$s');
     }
-    print('================================> $brokerInfo');
     return brokerInfo;
   }
 

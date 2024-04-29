@@ -350,7 +350,7 @@ class LoginscreenScreenState extends State<LoginscreenScreen> {
             ProgressDialogUtils.hideProgressDialog();
             ProgressDialogUtils.showSnackBar(
               context: context,
-              message: 'Something went wrong!',
+              message: '$res',
             );
             return;
           }

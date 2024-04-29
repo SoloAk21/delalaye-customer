@@ -366,9 +366,10 @@ class SignupscreenScreenState extends State<SignupscreenScreen> {
             ),
             suffixConstraints: BoxConstraints(maxHeight: 42.v),
             validator: (value) {
-              if (value == null ||
-                  (!isValidPassword(value, isRequired: true))) {
+              if (value == null) {
                 return "err_msg_please_enter_valid_password".tr;
+              } else if (value.length < 8) {
+                return "Passwords must be at least 8 characters";
               }
               return null;
             },
@@ -414,11 +415,12 @@ class SignupscreenScreenState extends State<SignupscreenScreen> {
               ),
               suffixConstraints: BoxConstraints(maxHeight: 42.v),
               validator: (value) {
-                if (value == null ||
-                    (!isValidPassword(value, isRequired: true))) {
+                if (value == null) {
                   return "err_msg_please_enter_valid_password".tr;
+                } else if (value.length < 8) {
+                  return "Passwords must be at least 8 characters";
                 } else if (confirmPassword != password) {
-                  return "Password do not match";
+                  return "Password doesn't match";
                 }
                 return null;
               },

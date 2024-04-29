@@ -154,7 +154,8 @@ class ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               isCancellable: false,
             );
             var res = await ApiAuthHelper.requestForResetePassword(
-                phonenumber: phoneNumber);
+              phonenumber: phoneNumber,
+            );
             if (res == 'true') {
               ProgressDialogUtils.hideProgressDialog();
               onTapContinueButton();

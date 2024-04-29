@@ -221,7 +221,6 @@ class PlacePickerState extends State<PlacePicker> {
 
   Future<LocationData> getCurrentLocation() async {
     Location location = Location();
-    // prefs = await SharedPreferences.getInstance();
     return await location.getLocation();
   }
 
@@ -233,7 +232,7 @@ class PlacePickerState extends State<PlacePicker> {
       var request = http.Request(
           'GET',
           Uri.parse(
-              'https://dev-api.delalaye.com/api/users/request/$connectionId'));
+              '${ApiAuthHelper.prodomain}/api/users/request/$connectionId'));
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
       if (response.statusCode == 200) {
@@ -306,8 +305,8 @@ class PlacePickerState extends State<PlacePicker> {
   }
 
   getBrokers({latitude, longitude}) async {
-    // prefs!.setBool('isCustomerRequestToConnect', false);
-    print('ServiceId => ${widget.selectedserviceId} $latitude $longitude');
+    print(
+        '======================> you are now in the getBrokers method =================');
     setState(() {
       PrefUtils.sharedPreferences!.setBool('isConnectiong', false);
       isConnectiong = false;
@@ -318,15 +317,25 @@ class PlacePickerState extends State<PlacePicker> {
         context: context,
         isCancellable: false,
       );
+      getPlaceId(
+        latitude == '' ? locationData.latitude : latitude,
+        longitude == '' ? locationData.longitude : longitude,
+      ).then((placeId) {
+        print(
+            '======================>  you are now in the place id searching for place name');
+        if (placeId != null) {
+          decodeAndSelectPlaceForFirst(placeId);
+        }
+      });
       listofbrokers = await ApiAuthHelper.fetchBrokerData(
         latitude: latitude == '' ? locationData.latitude : latitude,
         longitude: longitude == '' ? locationData.longitude : longitude,
-        serviceId: int.parse(widget.selectedserviceId ?? '1'),
+        serviceId: int.parse(
+          widget.selectedserviceId ?? '1',
+        ),
       );
-      if (listofbrokers.length > 0) {
+      if (listofbrokers.isNotEmpty || listofbrokers.length > 0) {
         for (var i = 0; i < listofbrokers.length; i++) {
-          // here you must check the broker is online or not,then add it to the list
-
           marker.add(
             Marker(
               position: LatLng(
@@ -341,14 +350,11 @@ class PlacePickerState extends State<PlacePicker> {
               onTap: () {
                 if (PrefUtils.sharedPreferences!.getBool('isConnectiong') ==
                     true) {
-                  print('hi ');
-
                   ProgressDialogUtils.showSnackBar(
                       context: context,
                       message:
                           "You have requested already. Please wait for the response or cancel the request");
                 } else {
-                  print('hii ');
                   setState(() {
                     fullname = listofbrokers[i].fullName ?? "";
                     rate = listofbrokers[i].rate ?? 0;
@@ -366,38 +372,31 @@ class PlacePickerState extends State<PlacePicker> {
           );
         }
         ProgressDialogUtils.hideProgressDialog();
-        setState(() {
-          PrefUtils.sharedPreferences!.setBool('isSearching', true);
-        });
+        PrefUtils.sharedPreferences!.setBool('isSearching', true);
+        PrefUtils.sharedPreferences!.remove('description');
         PrefUtils.sharedPreferences!.setString('description',
             'There are ${listofbrokers.length} Brokers available around $placeName');
-        print('set 1');
-
-        // ProgressDialogUtils.showSnackBar(
-        //   context: context,
-        //   message:
-        //       'There are ${listofbrokers.length} Brokers available around $placeName',
-        // );
+        if (!mounted) return;
+        setState(() {});
+        // Future.delayed(Duration.zero).then((value) {});
       } else {
         ProgressDialogUtils.hideProgressDialog();
-        setState(() {
-          PrefUtils.sharedPreferences!.setBool('isSearching', true);
-        });
+        PrefUtils.sharedPreferences!.setBool('isSearching', true);
+        PrefUtils.sharedPreferences!.remove('description');
         PrefUtils.sharedPreferences!.setString('description',
             'There are no brokers available around $placeName. Please search another place!');
-        print('set 2');
-        // ProgressDialogUtils.showSnackBar(
-        //   context: context,
-        //   message:
-        //       'There are no brokers available around $placeName. Please search another place!',
-        // );
+        if (!mounted) return;
+        setState(() {});
       }
     }).catchError((e) {
-      print('Error getting location: $e');
+      print('Error getting location: ====> $e');
       ProgressDialogUtils.hideProgressDialog();
       return;
     });
-    setState(() {});
+    Future.delayed(Duration.zero).then((value) {
+      if (!mounted) return;
+      setState(() {});
+    });
   }
 
   @override
@@ -409,10 +408,7 @@ class PlacePickerState extends State<PlacePicker> {
 
   @override
   void initState() {
-    getBrokers(
-      latitude: '',
-      longitude: '',
-    );
+    getBrokers(latitude: '', longitude: '');
     PrefUtils().init();
     _requestStreamController =
         StreamController<CheckForCustomerRequestModel>.broadcast();
@@ -462,6 +458,7 @@ class PlacePickerState extends State<PlacePicker> {
             onPressed: () {
               if (PrefUtils.sharedPreferences!.getBool('isConnectiong') ==
                   false) {
+                PrefUtils.sharedPreferences!.remove('description');
                 Navigator.pop(context); // Only pop if not waiting for response
               }
             },
@@ -480,7 +477,7 @@ class PlacePickerState extends State<PlacePicker> {
                       ? GoogleMap(
                           initialCameraPosition: CameraPosition(
                             target: initialTarget,
-                            zoom: 19,
+                            zoom: 50,
                             bearing: 50,
                           ),
                           myLocationButtonEnabled: true,
@@ -1281,6 +1278,21 @@ class PlacePickerState extends State<PlacePicker> {
     }).catchError((print) {});
   }
 
+  ///to get the palceId by using latitude and longitude
+  Future<String?> getPlaceId(double latitude, double longitude) async {
+    String endpoint =
+        'https://maps.googleapis.com/maps/api/geocode/json?latlng=$latitude,$longitude&key=${widget.apiKey}';
+    http.Response response = await http.get(Uri.parse(endpoint));
+    if (response.statusCode == 200) {
+      Map<String, dynamic> data = json.decode(response.body);
+      if (data['status'] == 'OK' && data['results'].isNotEmpty) {
+        // Extract place ID from the first result
+        return data['results'][0]['place_id'];
+      }
+    }
+    return null;
+  }
+
   /// To navigate to the selected place from the autocomplete list to the map,
   /// the lat,lng is required. This method fetches the lat,lng of the place and
   /// proceeds to moving the map to that location.
@@ -1309,6 +1321,37 @@ class PlacePickerState extends State<PlacePicker> {
           locationLongtude = location['lng'].toString();
         });
         getBrokers(latitude: location['lat'], longitude: location['lng']);
+        moveToLocation(latLng);
+      }
+    });
+  }
+
+  /// To navigate to the selected place from the autocomplete list to the map,
+  /// the lat,lng is required. This method fetches the lat,lng of the place and
+  /// proceeds to moving the map to that location.
+  void decodeAndSelectPlaceForFirst(String? placeId) {
+    clearOverlay();
+    var endpoint =
+        'https://maps.googleapis.com/maps/api/place/details/json?key=${widget.apiKey}'
+        '&placeid=$placeId';
+
+    http.get(endpoint.toUri()!).then((response) {
+      if (response.statusCode == 200) {
+        Map<String, dynamic> location =
+            jsonDecode(response.body)['result']['geometry']['location'];
+        var latLng = LatLng(location['lat'], location['lng']);
+        // here you need to request for new list of Broker information
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        if (responseData['status'] == 'OK' && responseData['result'] != null) {
+          // Extract the full name of the place from the response
+          setState(() {
+            placeName = responseData['result']['name'];
+          });
+        }
+        setState(() {
+          locationLatitude = location['lat'].toString();
+          locationLongtude = location['lng'].toString();
+        });
         moveToLocation(latLng);
       }
     });
@@ -1807,7 +1850,9 @@ class _SelectPlaceActionState extends State<SelectPlaceAction> {
                   const SizedBox(height: 10),
                   Text(
                     PrefUtils.sharedPreferences!.getBool('isSearching') == true
-                        ? PrefUtils.sharedPreferences!.getString('description')!
+                        ? PrefUtils.sharedPreferences!
+                                .getString('description') ??
+                            ''
                         : 'lbl_please_tap_on_the_nearest_delala'.tr,
                     style: TextStyle(
                       color:

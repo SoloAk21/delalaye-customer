@@ -163,7 +163,8 @@ class HomescreenScreenState extends State<HomescreenScreen> {
                         PrefUtils.sharedPreferences!
                             .setBool('isLoggedIn', false);
                         NavigatorService.pushNamedAndRemoveUntil(
-                            AppRoutes.loginscreenScreen);
+                          AppRoutes.loginscreenScreen,
+                        );
                         break;
                       default:
                     }
@@ -278,6 +279,7 @@ class HomescreenScreenState extends State<HomescreenScreen> {
     ImageConstant.furniture,
     // ImageConstant.more,
   ];
+  static List<String> listserviceID = ['1', '2', '3', '4', '5', '6'];
   static var iconList = [
     Icons.home,
     Icons.person,
@@ -329,7 +331,7 @@ class HomescreenScreenState extends State<HomescreenScreen> {
                       MaterialPageRoute(
                         builder: (context) => PlacePicker(
                           ConstantStrings.googleApiKey,
-                          '${index += 1}',
+                          listserviceID[index],
                         ),
                       ),
                     );
