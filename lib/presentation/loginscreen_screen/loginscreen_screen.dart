@@ -49,38 +49,45 @@ class LoginscreenScreenState extends State<LoginscreenScreen> {
         actions: [
           Container(
             margin: EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-            padding: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+            padding: EdgeInsets.symmetric(horizontal: 2, vertical: 2),
             decoration: BoxDecoration(
-              color: Color(0xFFFFA05B),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.language,
-                  color: Colors.white,
-                ),
                 DropdownButtonHideUnderline(
                   child: DropdownButton<Locale>(
+                    padding: EdgeInsets.all(5),
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontFamily: 'Poppies',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    icon: Icon(
+                      Icons.language,
+                      color: Colors.black,
+                    ),
                     value: languageProvider.currentLocale,
                     borderRadius: BorderRadius.circular(10),
                     dropdownColor: appTheme.blueGray400,
                     alignment: Alignment.center,
                     iconEnabledColor: Colors.white,
-                    iconSize: 30,
+                    iconSize: 20,
                     items: <DropdownMenuItem<Locale>>[
                       DropdownMenuItem<Locale>(
                         value: Locale('en', ''),
-                        child: Text('English'),
+                        child: Text('Eng'),
                       ),
                       DropdownMenuItem<Locale>(
                         value: Locale('am', ''),
-                        child: Text('Amharic'),
+                        child: Text('አማርኛ'),
                       ),
                       DropdownMenuItem<Locale>(
                         value: Locale('da', ''),
-                        child: Text('Afaan Oromoo'),
+                        child: Text('A/Oromoo'),
                       ),
                       // Add more languages here as needed
                     ],
@@ -102,120 +109,118 @@ class LoginscreenScreenState extends State<LoginscreenScreen> {
           width: double.maxFinite,
           child: Column(
             children: [
-              SizedBox(height: 105.v),
+              SizedBox(height: 25.v),
               Expanded(
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding:
-                        EdgeInsets.only(left: 43.h, right: 43.h, bottom: 116.v),
-                    child: Column(
-                      children: [
-                        CustomImageView(
-                          imagePath: ImageConstant.imgImage190x258,
-                          width: 258.h,
+                child: Padding(
+                  padding: EdgeInsets.only(left: 43.h, right: 43.h),
+                  child: Column(
+                    children: [
+                      CustomImageView(
+                        imagePath: ImageConstant.imgImage190x258,
+                        width: 258.h,
+                      ),
+                      SizedBox(height: 19.v),
+                      Text(
+                        "msg_login_to_your_account".tr,
+                        style: TextStyle(
+                          color: appTheme.blueGray400,
+                          fontSize: 24.fSize,
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w500,
                         ),
-                        SizedBox(height: 19.v),
-                        Text(
-                          "msg_login_to_your_account".tr,
+                      ),
+                      SizedBox(height: 20.v),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "lbl_phone_number".tr,
                           style: TextStyle(
                             color: appTheme.blueGray400,
-                            fontSize: 24.fSize,
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        SizedBox(height: 20.v),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            "lbl_phone_number".tr,
-                            style: TextStyle(
-                              color: appTheme.blueGray400,
-                              fontSize: 14.fSize,
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 4.v),
-                        _buildPhoneNumber(context),
-                        SizedBox(height: 12.v),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            "lbl_password".tr,
-                            style: TextStyle(
-                              color: appTheme.blueGray400,
-                              fontSize: 14.fSize,
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 4.v),
-                        _buildPassword(context),
-                        SizedBox(height: 23.v),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: GestureDetector(
-                            onTap: () {
-                              onTapForgotPasswordText(context);
-                            },
-                            child: Text(
-                              "msg_forgot_password".tr,
-                              style: TextStyle(
-                                color: appTheme.orangeA200,
-                                fontSize: 16.fSize,
-                                fontFamily: 'Poppins',
-                                fontWeight: FontWeight.w500,
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 55.v),
-                        _buildLogin(context),
-                        SizedBox(height: 25.v),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: Padding(
-                            padding: EdgeInsets.only(right: 16.h),
-                            child: GestureDetector(
-                              onTap: () {
-                                onTapSignUpText(context);
-                              },
-                              child: RichText(
-                                text: TextSpan(
-                                  children: [
-                                    TextSpan(
-                                        text: "msg_don_t_have_an_account2".tr,
-                                        style: CustomTextStyles
-                                            .bodyLargeBluegray400),
-                                    TextSpan(
-                                        text: "lbl_sign_up".tr,
-                                        style: CustomTextStyles
-                                            .bodyLargeOnPrimaryContainer)
-                                  ],
-                                ),
-                                textAlign: TextAlign.left,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 62.v),
-                        Text(
-                          "msg_alternatively_login".tr,
-                          style: TextStyle(
-                            color: appTheme.black900,
                             fontSize: 14.fSize,
                             fontFamily: 'Poppins',
                             fontWeight: FontWeight.w400,
                           ),
                         ),
-                        SizedBox(height: 22.v),
-                        _buildAppleIdandGooglesButton(context),
-                      ],
-                    ),
+                      ),
+                      SizedBox(height: 4.v),
+                      _buildPhoneNumber(context),
+                      SizedBox(height: 12.v),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "lbl_password".tr,
+                          style: TextStyle(
+                            color: appTheme.blueGray400,
+                            fontSize: 14.fSize,
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 4.v),
+                      _buildPassword(context),
+                      SizedBox(height: 23.v),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: GestureDetector(
+                          onTap: () {
+                            onTapForgotPasswordText(context);
+                          },
+                          child: Text(
+                            "msg_forgot_password".tr,
+                            style: TextStyle(
+                              color: appTheme.orangeA200,
+                              fontSize: 16.fSize,
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w500,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 55.v),
+                      _buildLogin(context),
+                      SizedBox(height: 25.v),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Padding(
+                          padding: EdgeInsets.only(right: 16.h),
+                          child: GestureDetector(
+                            onTap: () {
+                              onTapSignUpText(context);
+                            },
+                            child: RichText(
+                              text: TextSpan(
+                                children: [
+                                  TextSpan(
+                                      text: "msg_don_t_have_an_account2".tr,
+                                      style: CustomTextStyles
+                                          .bodyLargeBluegray400),
+                                  TextSpan(
+                                    text: "lbl_sign_up".tr,
+                                    style: CustomTextStyles
+                                        .bodyLargeOnPrimaryContainer,
+                                  )
+                                ],
+                              ),
+                              textAlign: TextAlign.left,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 62.v),
+                      Text(
+                        "msg_alternatively_login".tr,
+                        style: TextStyle(
+                          color: appTheme.black900,
+                          fontSize: 14.fSize,
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      SizedBox(height: 22.v),
+                      _buildAppleIdandGooglesButton(context),
+                    ],
                   ),
                 ),
               ),
@@ -233,6 +238,7 @@ class LoginscreenScreenState extends State<LoginscreenScreen> {
         return CustomTextFormField(
           controller: provider.phoneNumberController,
           textStyle: TextStyle(color: appTheme.black900),
+          isPhoneNumber: true,
           hintText: "msg_enter_your_phone".tr,
           hintStyle: TextStyle(color: appTheme.blueGray400),
           textInputType: TextInputType.phone,
@@ -558,10 +564,11 @@ class LoginscreenScreenState extends State<LoginscreenScreen> {
           ProgressDialogUtils.hideProgressDialog();
           ProgressDialogUtils.showSnackBar(
             context: context,
-            message: "Something is wrong!",
+            message: "Something is wrong!, please try again",
           );
         } else {
           var auth = await googleSignInAccount.authentication;
+          print('Auth.accessToken! from Google: ${auth.accessToken!}');
           var res =
               await ApiAuthHelper.googleSignIn(accessToken: auth.accessToken!);
           if (res == '') {
@@ -573,6 +580,7 @@ class LoginscreenScreenState extends State<LoginscreenScreen> {
             );
           } else {
             ProgressDialogUtils.hideProgressDialog();
+            print('Error from Backend: $res');
             ProgressDialogUtils.showSnackBar(
               context: context,
               message: '$res',
@@ -582,13 +590,15 @@ class LoginscreenScreenState extends State<LoginscreenScreen> {
         }
       } on PlatformException catch (e) {
         ProgressDialogUtils.hideProgressDialog();
+        print('Error from PlatformException: $e');
         ProgressDialogUtils.showSnackBar(
           context: context,
           message: '${e.message}',
         );
         print('${e.message}');
-      } on NetworkException catch (_) {
+      } on NetworkException catch (e) {
         ProgressDialogUtils.hideProgressDialog();
+        print('Error from NetworkException: $e');
         ProgressDialogUtils.showSnackBar(
           context: context,
           message: 'Network Error',

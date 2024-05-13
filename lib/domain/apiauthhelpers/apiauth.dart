@@ -475,7 +475,6 @@ class ApiAuthHelper {
     required String accessToken,
   }) async {
     try {
-      // print('object ======> $accessToken');
       var headers = {'Content-Type': 'application/json'};
       var request = http.Request(
           'POST', Uri.parse('$prodomain/api/auth/user/login/google/'));

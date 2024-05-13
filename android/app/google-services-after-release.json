@@ -14,11 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "500749420107-nc5otquedadvr1jptiacudmf3apd7r7k.apps.googleusercontent.com",
+          "client_id": "500749420107-jtiv79qka721bquh5s533gkvaj5ds4vf.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.delalayebroker.app",
-            "certificate_hash": "2a26248778753770dead5bd237ca56c6279286dd"
+            "certificate_hash": "6a440bac229281f93d7dcffb05915abed8fc20f4"
           }
         },
         {
@@ -58,11 +58,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "500749420107-lntktjcah9o42p2ekqtnu802s7cohago.apps.googleusercontent.com",
+          "client_id": "500749420107-9d3n5nccdabls8p1sokihdcpmg7boh1v.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.delalayecustomer.app",
-            "certificate_hash": "2a26248778753770dead5bd237ca56c6279286dd"
+            "certificate_hash": "bc5962f4826852e1e7359bbd439bc6762bb7cfa2"
           }
         },
         {

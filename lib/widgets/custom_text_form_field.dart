@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:delalochu/core/app_export.dart';
+import 'package:flutter/services.dart';
 
 class CustomTextFormField extends StatelessWidget {
   CustomTextFormField({
@@ -11,6 +12,7 @@ class CustomTextFormField extends StatelessWidget {
     this.scrollPadding,
     this.controller,
     this.focusNode,
+    this.isPhoneNumber = false,
     this.onChanged,
     this.onSaved,
     this.autofocus = false,
@@ -49,7 +51,7 @@ class CustomTextFormField extends StatelessWidget {
 
   final Function(String?)? onSaved;
   final String? initialValue;
-
+  final bool isPhoneNumber;
   final bool? autofocus;
 
   final TextStyle? textStyle;
@@ -98,6 +100,12 @@ class CustomTextFormField extends StatelessWidget {
         width: width ?? double.maxFinite,
         child: TextFormField(
           initialValue: initialValue,
+          inputFormatters: isPhoneNumber
+              ? [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(10),
+                ]
+              : [],
           scrollPadding:
               EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
           controller: controller,

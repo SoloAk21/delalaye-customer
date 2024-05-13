@@ -107,6 +107,7 @@ class ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         builder: (context, phoneNumberController, child) {
           return CustomTextFormField(
             controller: phoneNumberController,
+            isPhoneNumber: true,
             hintText: "msg_enter_your_phone".tr,
             hintStyle: TextStyle(color: appTheme.blueGray400),
             onChanged: (p0) => phoneNumber = p0,
