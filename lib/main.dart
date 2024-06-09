@@ -5,9 +5,11 @@ import 'package:delalochu/localization/lang_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:location/location.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/app_export.dart';
+import 'presentation/homescreen_screen/provider/homescreen_provider.dart';
 
 var globalMessengerKey = GlobalKey<ScaffoldMessengerState>();
 void main() {
@@ -27,53 +29,91 @@ void main() {
         : prefs.getBool('isLoggedIn');
     HttpOverrides.global = MyHttpOverrides();
 
-    runApp(MyApp(isLoggedIn: isLoggedIn!));
+    runApp(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => LanguageProvider()),
+          ChangeNotifierProvider(create: (context) => ThemeProvider()),
+          ChangeNotifierProvider(create: (context) => HomescreenProvider()),
+        ],
+        child: MyApp(isLoggedIn: isLoggedIn!),
+      ),
+    );
   });
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   final bool isLoggedIn;
   const MyApp({
     Key? key,
     required this.isLoggedIn,
   }) : super(key: key);
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late HomescreenProvider homescreenProvider;
+  Future<LocationData> getCurrentLocation() async {
+    Location location = Location();
+    return await location.getLocation();
+  }
+
+  getBrokerListBasedOnTheirServiceAndLocation() async {
+    getCurrentLocation().then((locationData) async {
+      for (var i = 1; i < 4; i++) {
+        debugPrint(
+            'Info - $i: ${locationData.latitude}, ${locationData.longitude}');
+        await homescreenProvider.fetchBrokerList(
+          latitude: locationData.latitude ?? 0.0,
+          longitude: locationData.longitude ?? 0.0,
+          serviceId: i,
+        );
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    homescreenProvider =
+        Provider.of<HomescreenProvider>(context, listen: false);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // getBrokerListBasedOnTheirServiceAndLocation();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Sizer(
       builder: (context, orientation, deviceType) {
-        return MultiProvider(
-          providers: [
-            ChangeNotifierProvider(create: (_) => LanguageProvider()),
-            ChangeNotifierProvider(create: (context) => ThemeProvider()),
-          ],
-          child: Consumer2<ThemeProvider, LanguageProvider>(
-            builder: (context, provider, languageProvider, child) {
-              print('currentLocale ${languageProvider.currentLocale}');
-              return MaterialApp(
-                theme: theme,
-                title: 'delalochu',
-                navigatorKey: NavigatorService.navigatorKey,
-                debugShowCheckedModeBanner: false,
-                localizationsDelegates: [
-                  AppLocalizationDelegate(),
-                  GlobalMaterialLocalizations.delegate,
-                  GlobalWidgetsLocalizations.delegate,
-                  GlobalCupertinoLocalizations.delegate,
-                ],
-                supportedLocales: [
-                  Locale('en', ''),
-                  Locale('am', ''),
-                  Locale('da', ''),
-                ],
-                locale: Locale(
-                    PrefUtils.sharedPreferences?.getString('language_code') ??
-                        'en',
-                    ''),
-                initialRoute: AppRoutes.initialRoute,
-                routes: AppRoutes.routes,
-              );
-            },
-          ),
+        return Consumer2<ThemeProvider, LanguageProvider>(
+          builder: (context, provider, languageProvider, child) {
+            return MaterialApp(
+              theme: theme,
+              title: 'delalochu',
+              navigatorKey: NavigatorService.navigatorKey,
+              debugShowCheckedModeBanner: false,
+              localizationsDelegates: [
+                AppLocalizationDelegate(),
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: [
+                Locale('en', ''),
+                Locale('am', ''),
+                Locale('da', ''),
+              ],
+              locale: Locale(
+                  PrefUtils.sharedPreferences?.getString('language_code') ??
+                      'en',
+                  ''),
+              initialRoute: AppRoutes.initialRoute,
+              routes: AppRoutes.routes,
+            );
+          },
         );
       },
     );

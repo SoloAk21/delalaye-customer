@@ -1,5 +1,6 @@
 //ignore: unused_import
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PrefUtils {
@@ -14,7 +15,7 @@ class PrefUtils {
 
   Future<void> init() async {
     sharedPreferences ??= await SharedPreferences.getInstance();
-    print('SharedPreference Initialized');
+    debugPrint('SharedPreference Initialized');
   }
 
   ///will clear all the data stored in preference

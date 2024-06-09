@@ -3,6 +3,7 @@ import 'package:delalochu/localization/lang_provider.dart';
 import 'package:delalochu/widgets/app_bar/custom_app_bar.dart';
 import 'package:delalochu/presentation/map_view/place_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:location/location.dart';
 import 'provider/homescreen_provider.dart';
 
 class HomescreenScreen extends StatefulWidget {
@@ -12,18 +13,47 @@ class HomescreenScreen extends StatefulWidget {
   HomescreenScreenState createState() => HomescreenScreenState();
 
   static Widget builder(BuildContext context) {
-    return ChangeNotifierProvider(
-        create: (context) => HomescreenProvider(), child: HomescreenScreen());
+    return HomescreenScreen();
   }
 }
 
 class HomescreenScreenState extends State<HomescreenScreen> {
+  late HomescreenProvider homescreenProvider;
   static final GlobalKey<ScaffoldState> scaffoldKey =
       GlobalKey<ScaffoldState>();
+  Future<LocationData> getCurrentLocation() async {
+    Location location = Location();
+    return await location.getLocation();
+  }
+
+  getBrokerListBasedOnTheirServiceAndLocation() async {
+    await homescreenProvider.isLoadinghouseSaleBrokerInfo(true);
+    await homescreenProvider.isLoadinghouseRantBrokerInfo(true);
+    await homescreenProvider.isLoadingcarSaleBrokerinfo(true);
+    await homescreenProvider.isLoadingcarRentBrokerinfo(true);
+    await homescreenProvider.isLoadinghouseMaidBrokerInfo(true);
+    await homescreenProvider.isLoadingusedItemBrokerInfo(true);
+    getCurrentLocation().then((locationData) async {
+      for (var i = 1; i < 7; i++) {
+        debugPrint(
+            'Info - $i: ${locationData.latitude}, ${locationData.longitude}');
+        await homescreenProvider.fetchBrokerList(
+          latitude: locationData.latitude ?? 0.0,
+          longitude: locationData.longitude ?? 0.0,
+          serviceId: i,
+        );
+      }
+    });
+  }
 
   @override
   void initState() {
     super.initState();
+    homescreenProvider =
+        Provider.of<HomescreenProvider>(context, listen: false);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      getBrokerListBasedOnTheirServiceAndLocation();
+    });
   }
 
   @override
@@ -389,40 +419,41 @@ class _ShowdialogState extends State<Showdialog> {
     var languageProvider =
         Provider.of<LanguageProvider>(context, listen: false);
     return SimpleDialog(
-        title: Text('lbl_select_language'.tr),
-        children: <Widget>[
-          SimpleDialogOption(
-            onPressed: () {
-              setState(() {
-                Locale newLocale = Locale("en", '');
-                languageProvider.changeLanguage(newLocale);
-              });
-              NavigatorService.pushNamed(AppRoutes.homescreenScreens);
-            },
-            child: Text('English'),
-          ),
-          SimpleDialogOption(
-            onPressed: () {
-              Locale newLocale = Locale("am", '');
+      title: Text('lbl_select_language'.tr),
+      children: <Widget>[
+        SimpleDialogOption(
+          onPressed: () {
+            setState(() {
+              Locale newLocale = Locale("en", '');
               languageProvider.changeLanguage(newLocale);
-              setState(() {});
-              Navigator.pop(context);
-            },
-            child: Text('Amharic'),
-          ),
-          SimpleDialogOption(
-            onPressed: () {
-              setState(() {
-                Locale newLocale = Locale("da", '');
-                languageProvider.changeLanguage(newLocale);
-              });
-              // Perform action when Afaan Oromo is selected
-              // Navigator.pop(context, 'Afaan Oromoo');
-              Navigator.pop(context);
-              // NavigatorService.pushNamed(AppRoutes.homescreenScreens);
-            },
-            child: Text('Afaan Oromoo'),
-          ),
-        ]);
+            });
+            NavigatorService.pushNamed(AppRoutes.homescreenScreens);
+          },
+          child: Text('English'),
+        ),
+        SimpleDialogOption(
+          onPressed: () {
+            Locale newLocale = Locale("am", '');
+            languageProvider.changeLanguage(newLocale);
+            setState(() {});
+            Navigator.pop(context);
+          },
+          child: Text('Amharic'),
+        ),
+        SimpleDialogOption(
+          onPressed: () {
+            setState(() {
+              Locale newLocale = Locale("da", '');
+              languageProvider.changeLanguage(newLocale);
+            });
+            // Perform action when Afaan Oromo is selected
+            // Navigator.pop(context, 'Afaan Oromoo');
+            Navigator.pop(context);
+            // NavigatorService.pushNamed(AppRoutes.homescreenScreens);
+          },
+          child: Text('Afaan Oromoo'),
+        ),
+      ],
+    );
   }
 }

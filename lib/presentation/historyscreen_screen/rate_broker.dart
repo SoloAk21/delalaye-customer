@@ -131,7 +131,7 @@ class _RateBrokerScreenState extends State<RateBrokerScreen> {
                                   color: Colors.amber,
                                 ),
                                 onRatingUpdate: (rating) {
-                                  print(rating);
+                                  debugPrint(rating.toString());
                                 },
                               ),
                             ],
@@ -177,7 +177,7 @@ class _RateBrokerScreenState extends State<RateBrokerScreen> {
                     setState(() {
                       newRateValue = rating.toString();
                     });
-                    print(rating);
+                    debugPrint(rating.toString());
                   },
                 ),
                 SizedBox(height: 30),

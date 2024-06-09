@@ -203,7 +203,7 @@ class ProfilescreenScreenState extends State<ProfilescreenScreen> {
                               context: context,
                               isCancellable: false,
                             );
-                            print('fileImages => $fileImages');
+                            debugPrint('fileImages => $fileImages');
                             final convertedbase64Encode =
                                 ImageTools.convertImagesToBase64(fileImages!);
                             PrefUtils.sharedPreferences!
@@ -540,7 +540,7 @@ class ProfilescreenScreenState extends State<ProfilescreenScreen> {
       onValue.writeAsBytesSync(img.encodePng(imageDecode!));
       setState(() {
         fileImages = onValue;
-        print('THis image => $fileImages');
+        debugPrint('THis image => $fileImages');
       });
     });
   }

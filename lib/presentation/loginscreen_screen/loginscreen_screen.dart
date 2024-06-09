@@ -219,7 +219,7 @@ class LoginscreenScreenState extends State<LoginscreenScreen> {
                         ),
                       ),
                       SizedBox(height: 22.v),
-                      _buildAppleIdandGooglesButton(context),
+                      Expanded(child: _buildAppleIdandGooglesButton(context)),
                     ],
                   ),
                 ),
@@ -336,29 +336,36 @@ class LoginscreenScreenState extends State<LoginscreenScreen> {
     return ElevatedButton(
       onPressed: () async {
         if (_formKey.currentState!.validate()) {
-          // here we check if the user is already in the account
-          ProgressDialogUtils.showProgressDialog(
-            context: context,
-            isCancellable: false,
-          );
-          var res = await ApiAuthHelper.login(
-            password: password!,
-            phoneNumber: phoneNumber!,
-          );
-          if (res == '') {
-            ProgressDialogUtils.hideProgressDialog();
-            onTapLogin(context);
-            ProgressDialogUtils.showSnackBar(
+          if (await NetworkInfo().isConnected()) {
+            ProgressDialogUtils.showProgressDialog(
               context: context,
-              message: 'You have successfully logged in',
+              isCancellable: false,
             );
+            var res = await ApiAuthHelper.login(
+              password: password!,
+              phoneNumber: phoneNumber!,
+            );
+            if (res == '') {
+              ProgressDialogUtils.hideProgressDialog();
+              onTapLogin(context);
+              ProgressDialogUtils.showSnackBar(
+                context: context,
+                message: 'You have successfully logged in',
+              );
+            } else {
+              ProgressDialogUtils.hideProgressDialog();
+              ProgressDialogUtils.showSnackBar(
+                context: context,
+                message: '$res',
+              );
+              return;
+            }
           } else {
-            ProgressDialogUtils.hideProgressDialog();
             ProgressDialogUtils.showSnackBar(
               context: context,
-              message: '$res',
+              message:
+                  'There is no intranet connection, please check you internet and try again',
             );
-            return;
           }
         } else {
           return null;
@@ -568,7 +575,7 @@ class LoginscreenScreenState extends State<LoginscreenScreen> {
           );
         } else {
           var auth = await googleSignInAccount.authentication;
-          print('Auth.accessToken! from Google: ${auth.accessToken!}');
+          debugPrint('Auth.accessToken! from Google: ${auth.accessToken!}');
           var res =
               await ApiAuthHelper.googleSignIn(accessToken: auth.accessToken!);
           if (res == '') {
@@ -580,7 +587,7 @@ class LoginscreenScreenState extends State<LoginscreenScreen> {
             );
           } else {
             ProgressDialogUtils.hideProgressDialog();
-            print('Error from Backend: $res');
+            debugPrint('Error from Backend: $res');
             ProgressDialogUtils.showSnackBar(
               context: context,
               message: '$res',
@@ -590,15 +597,15 @@ class LoginscreenScreenState extends State<LoginscreenScreen> {
         }
       } on PlatformException catch (e) {
         ProgressDialogUtils.hideProgressDialog();
-        print('Error from PlatformException: $e');
+        debugPrint('Error from PlatformException: $e');
         ProgressDialogUtils.showSnackBar(
           context: context,
           message: '${e.message}',
         );
-        print('${e.message}');
+        debugPrint('${e.message}');
       } on NetworkException catch (e) {
         ProgressDialogUtils.hideProgressDialog();
-        print('Error from NetworkException: $e');
+        debugPrint('Error from NetworkException: $e');
         ProgressDialogUtils.showSnackBar(
           context: context,
           message: 'Network Error',
@@ -609,7 +616,7 @@ class LoginscreenScreenState extends State<LoginscreenScreen> {
           context: context,
           message: '$error',
         );
-        print('Google Signin Error => $error StackTrec: $s');
+        debugPrint('Google Signin Error => $error StackTrec: $s');
       }
     } else {
       ProgressDialogUtils.showSnackBar(
@@ -631,7 +638,7 @@ class LoginscreenScreenState extends State<LoginscreenScreen> {
             .showSnackBar(SnackBar(content: Text('user data is empty')));
       }
     }).catchError((onError) {
-      print('Error => ${onError.toString()}');
+      debugPrint('Error => ${onError.toString()}');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(onError.toString()),

@@ -54,4 +54,5 @@ class ImageConstant {
       '$imagePath/img_fi_ss_arrow_small_left.svg';
 
   static String imageNotFound = 'assets/images/image_not_found.png';
+  static String currentuserlocation = '$imagePath/currentuserlocation.png';
 }

@@ -109,7 +109,7 @@ class _AllBrokerInfoState extends State<AllBrokerInfo> {
                                   color: Colors.amber,
                                 ),
                                 onRatingUpdate: (rating) {
-                                  print(rating);
+                                  debugPrint(rating.toString());
                                 },
                               ),
                             ],
@@ -260,7 +260,7 @@ class _AllBrokerInfoState extends State<AllBrokerInfo> {
                     color: Colors.amber,
                   ),
                   onRatingUpdate: (rating) {
-                    print(rating);
+                    debugPrint(rating.toString());
                   },
                 ),
                 SizedBox(height: 30),

@@ -1,17 +1,24 @@
 import 'dart:convert';
 
 import 'package:delalochu/data/models/servicesModel/getServicesList.dart';
+import 'package:delalochu/presentation/homescreen_screen/models/CarRantSviceBroker.dart';
+import 'package:delalochu/presentation/homescreen_screen/models/CarSaleerviceBroker.dart';
+import 'package:delalochu/presentation/homescreen_screen/models/UsedItemSviceBroker.dart';
+import 'package:delalochu/presentation/homescreen_screen/models/houseSaleserviceBroker.dart';
 import 'package:delalochu/presentation/map_view/model/broker_info_model.dart';
 import 'package:delalochu/presentation/map_view/model/broker_request_model.dart';
 import 'package:delalochu/presentation/profilescreen_screen/models/user_model.dart';
 import 'package:delalochu/routes/app_routes.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:inspireui/utils/logs.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/utils/navigator_service.dart';
 import '../../core/utils/pref_utils.dart';
+import '../../presentation/homescreen_screen/models/HouseMaidSviceBroker.dart';
 import '../../presentation/homescreen_screen/models/connectionhistoryModel.dart';
+import '../../presentation/homescreen_screen/models/houseRantserviceBroker.dart';
 
 class ApiAuthHelper {
   static var prodomain = "https://api.delalaye.com";
@@ -20,19 +27,19 @@ class ApiAuthHelper {
   static Future<bool> updateProfile(
       {username, phoneNumber, password, image, isnopasandimage}) async {
     try {
-      print('image $image');
+      debugPrint('image $image');
       var token = PrefUtils.sharedPreferences!.getString('token') ?? '';
       var userId = PrefUtils.sharedPreferences!.getInt('userId') ?? '';
       var headers = {'x-auth-token': token, 'Content-Type': 'application/json'};
       var request = http.Request(
           'PUT', Uri.parse('$prodomain/api/users/profile/$userId'));
       if (isnopasandimage) {
-        print('is no pass and iamge');
+        debugPrint('is no pass and iamge');
         request.body =
             json.encode({"fullName": username, "phone": phoneNumber});
       } else {
         if (password != '' && image == '') {
-          print(' pass and no iamge');
+          debugPrint(' pass and no iamge');
 
           request.body = json.encode({
             "fullName": username,
@@ -40,12 +47,11 @@ class ApiAuthHelper {
             "password": password
           });
         } else if (password == '' && image != '') {
-          print('is no pass and has iamge $image');
-
+          debugPrint('is no pass and has iamge $image');
           request.body = json.encode(
               {"fullName": username, "phone": phoneNumber, "photo": image});
         } else if (password != '' && image != '') {
-          print('has pass and iamge');
+          debugPrint('has pass and iamge');
 
           request.body = json.encode({
             "fullName": username,
@@ -58,14 +64,14 @@ class ApiAuthHelper {
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
       if (response.statusCode == 200) {
-        print(await response.stream.bytesToString());
+        debugPrint(await response.stream.bytesToString());
         return true;
       } else {
-        print(await response.stream.bytesToString());
+        debugPrint(await response.stream.bytesToString());
         return false;
       }
     } catch (e, s) {
-      print('updateProfile Error: $e StackTres => $s');
+      debugPrint('updateProfile Error: $e StackTres => $s');
       return false;
     }
   }
@@ -84,14 +90,14 @@ class ApiAuthHelper {
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
       if (response.statusCode == 200) {
-        print(await response.stream.bytesToString());
+        debugPrint(await response.stream.bytesToString());
         return true;
       } else {
-        print(await response.stream.bytesToString());
+        debugPrint(await response.stream.bytesToString());
         return false;
       }
     } catch (e, s) {
-      print('updateProfile Error: $e StackTres => $s');
+      debugPrint('updateProfile Error: $e StackTres => $s');
       return false;
     }
   }
@@ -111,10 +117,10 @@ class ApiAuthHelper {
 
         services = servicesData.services ?? [];
       } else {
-        print('Failed to load services: ${response.reasonPhrase}');
+        debugPrint('Failed to load services: ${response.reasonPhrase}');
       }
     } catch (e) {
-      print('Error fetching services: $e');
+      debugPrint('Error fetching services: $e');
     }
 
     return services;
@@ -138,9 +144,10 @@ class ApiAuthHelper {
         brokerdata.add(res);
       } else if (response.statusCode == 401) {}
     } catch (e, s) {
-      print('Error: $e StackTres => $s');
+      debugPrint('Error: $e StackTres => $s');
     }
-    print('===================> $prodomain/api/users/request/$connectionId');
+    debugPrint(
+        '===================> $prodomain/api/users/request/$connectionId');
     yield brokerdata;
   }
 
@@ -149,7 +156,7 @@ class ApiAuthHelper {
     List<Connection> listofres = [];
     try {
       var token = PrefUtils.sharedPreferences!.getString('token') ?? '';
-      print('token: ' + token);
+      debugPrint('token: ' + token);
       var headers = {'x-auth-token': token};
       var request = http.Request(
           'GET', Uri.parse('$prodomain/api/users/connection/history'));
@@ -165,7 +172,7 @@ class ApiAuthHelper {
             (a, b) => b.createdAt!.compareTo(a.createdAt ?? DateTime.now()));
       }
     } catch (e, s) {
-      print('cancelBrokerRequest Exception: => $e' 'StackTrace:' '$s');
+      debugPrint('cancelBrokerRequest Exception: => $e' 'StackTrace:' '$s');
     }
     return listofres;
   }
@@ -188,9 +195,10 @@ class ApiAuthHelper {
         brokerdata.add(res);
       } else if (response.statusCode == 401) {}
     } catch (e, s) {
-      print('Error: $e StackTres => $s');
+      debugPrint('Error: $e StackTres => $s');
     }
-    print('===================> $prodomain/api/users/request/$connectionId');
+    debugPrint(
+        '===================> $prodomain/api/users/request/$connectionId');
     return brokerdata;
   }
 
@@ -198,7 +206,7 @@ class ApiAuthHelper {
     UserModel brokerdata = UserModel();
     try {
       var token = PrefUtils.sharedPreferences!.getString('token') ?? '';
-      print('token =>$token ');
+      debugPrint('token =>$token ');
       var headers = {'x-auth-token': token};
       var request = http.Request('GET', Uri.parse('$prodomain/api/auth/user'));
       request.headers.addAll(headers);
@@ -215,7 +223,7 @@ class ApiAuthHelper {
         return brokerdata;
       }
     } catch (e, s) {
-      print('getBrokerData Error: $e StackTres => $s');
+      debugPrint('getBrokerData Error: $e StackTres => $s');
       return brokerdata;
     }
   }
@@ -229,10 +237,10 @@ class ApiAuthHelper {
   }) async {
     List<BrokerRequestModel> brokerdata = [];
     try {
-      print(
+      debugPrint(
           '$usreId: $serviceId: $locationName: $locationLatitude: $locationLongtude ');
       var token = PrefUtils.sharedPreferences!.getString('token') ?? '';
-      print('token ==> $token');
+      debugPrint('token ==> $token');
       var headers = {'Content-Type': 'application/json', 'x-auth-token': token};
       var request = http.Request(
           'POST', Uri.parse('$prodomain/api/users/request-broker'));
@@ -252,7 +260,7 @@ class ApiAuthHelper {
         brokerdata.add(res);
       }
     } catch (e, s) {
-      print('Error: $e StackTres => $s');
+      debugPrint('Error: $e StackTres => $s');
     }
     return brokerdata;
   }
@@ -273,7 +281,7 @@ class ApiAuthHelper {
         }
       }
     } catch (e, s) {
-      print('updateStatus Error: $e StackTres => $s');
+      debugPrint('updateStatus Error: $e StackTres => $s');
     }
     return false;
   }
@@ -289,11 +297,11 @@ class ApiAuthHelper {
       http.StreamedResponse response = await request.send();
       if (response.statusCode == 200) {
         var res = await response.stream.bytesToString();
-        print('this response => $res');
+        debugPrint('this response => $res');
         return true;
       }
     } catch (e, s) {
-      print('updateStatus Error: $e StackTres => $s');
+      debugPrint('updateStatus Error: $e StackTres => $s');
     }
     return false;
   }
@@ -309,20 +317,20 @@ class ApiAuthHelper {
         request.headers.addAll(headers);
         http.StreamedResponse response = await request.send();
         if (response.statusCode == 200) {
-          print(await response.stream.bytesToString());
+          debugPrint(await response.stream.bytesToString());
           return true;
         } else {
-          print(
-              ' print(await response.stream.bytesToString()); ==> ${await response.stream.bytesToString()}');
-          print(
-              ' print(await response.stream.bytesToString()); ==> ${response.statusCode}');
+          debugPrint(
+              ' debugPrint(await response.stream.bytesToString()); ==> ${await response.stream.bytesToString()}');
+          debugPrint(
+              ' debugPrint(await response.stream.bytesToString()); ==> ${response.statusCode}');
         }
       } else {
-        print(
-            ' print(await response.stream.bytesToString()); ==> user Id is null ');
+        debugPrint(
+            ' debugPrint(await response.stream.bytesToString()); ==> user Id is null ');
       }
     } catch (e, s) {
-      print('changePassword Error: $e StackTres => $s');
+      debugPrint('changePassword Error: $e StackTres => $s');
     }
     return false;
   }
@@ -336,7 +344,7 @@ class ApiAuthHelper {
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
       if (response.statusCode == 200) {
-        print(await response.stream.bytesToString());
+        debugPrint(await response.stream.bytesToString());
         return 'true';
       } else if (response.statusCode == 400) {
         var jsonResponse = json.decode(await response.stream.bytesToString());
@@ -348,11 +356,11 @@ class ApiAuthHelper {
         }
         return 'Unknown error';
       } else {
-        print(response.reasonPhrase);
+        debugPrint(response.reasonPhrase);
         return 'false';
       }
     } catch (e, s) {
-      print('requestForResetePassword Error: $e StackTres => $s');
+      debugPrint('requestForResetePassword Error: $e StackTres => $s');
       return 'false';
     }
   }
@@ -392,7 +400,7 @@ class ApiAuthHelper {
         return '${response.reasonPhrase}';
       }
     } catch (e, s) {
-      print('Error ==> $e  StackTrace => $s');
+      debugPrint('Error ==> $e  StackTrace => $s');
       return '$e';
     }
   }
@@ -413,6 +421,7 @@ class ApiAuthHelper {
         PrefUtils.sharedPreferences!.setString('token', data['token']);
         PrefUtils.sharedPreferences!.setBool('isLoggedIn', true);
         PrefUtils.sharedPreferences!.setInt('userId', data['user']['id']);
+        debugPrint('token => ${data['token']}');
         return ''; // Handle success case here if needed
       } else if (response.statusCode == 400) {
         // Parse the error response and return the "msg" value
@@ -425,11 +434,11 @@ class ApiAuthHelper {
         }
         return 'Unknown error';
       } else {
-        print(response.reasonPhrase);
+        debugPrint(response.reasonPhrase);
         return response.reasonPhrase.toString();
       }
     } catch (e, s) {
-      print('Error ==> $e  StackTrace => $s');
+      debugPrint('Error ==> $e  StackTrace => $s');
       return '$e';
     }
   }
@@ -451,22 +460,22 @@ class ApiAuthHelper {
         var responseBody = await response.stream.bytesToString();
         var jsonResponse = json.decode(responseBody);
         var checkoutUrl = jsonResponse["response"]['data']['checkout_url'];
-        print("Checkout URL: $checkoutUrl");
+        debugPrint("Checkout URL: $checkoutUrl");
         return checkoutUrl.toString();
       } else if (response.statusCode == 400) {
         var responseBody = await response.stream.bytesToString();
         var jsonResponse = json.decode(responseBody);
-        print('Error From  ==> $jsonResponse');
+        debugPrint('Error From  ==> $jsonResponse');
         return '';
       } else if (response.statusCode == 401) {
-        print('Error ==> ${response.reasonPhrase}');
+        debugPrint('Error ==> ${response.reasonPhrase}');
         return '';
       } else {
-        print('Error ==> ${response.reasonPhrase}');
+        debugPrint('Error ==> ${response.reasonPhrase}');
         return '';
       }
     } catch (e, s) {
-      print('Error ==> $e  StackTrace => $s');
+      debugPrint('Error ==> $e  StackTrace => $s');
       return '';
     }
   }
@@ -498,18 +507,18 @@ class ApiAuthHelper {
         }
         return 'Unknown error';
       } else {
-        print(response.reasonPhrase);
+        debugPrint(response.reasonPhrase);
         return response.reasonPhrase.toString();
       }
     } catch (e, s) {
-      print('Error ==> $e  StackTrace => $s');
+      debugPrint('Error ==> $e  StackTrace => $s');
       return '$e';
     }
   }
 
   static Future<List<BrokerInfo>> fetchBrokerData(
       {latitude, longitude, serviceId}) async {
-    print(
+    debugPrint(
         '================================> here is a fetchBrokerData API function');
     var brokerInfo = <BrokerInfo>[];
     try {
@@ -521,7 +530,6 @@ class ApiAuthHelper {
           Uri.parse(
               '$prodomain/api/broker/filter?serviceId=$serviceId&latitude=$latitude&longitude=$longitude'));
       request.headers.addAll(headers);
-
       http.StreamedResponse response = await request.send();
       if (response.statusCode == 200) {
         final List<dynamic> responseData =
@@ -531,11 +539,191 @@ class ApiAuthHelper {
             brokerInfo.add(BrokerInfo.fromJson(item));
           }
         }
-        print(
+        debugPrint(
             '================================> here is a fetchBrokerData response.statusCode == 200');
       } else {
-        print(
+        debugPrint(
             '==========================> $brokerInfo ${response.statusCode} ${response.reasonPhrase}');
+      }
+    } catch (e, s) {
+      printLog('fetchBrokerData Exception: $e' 'StackTrace:' '$s');
+    }
+    return brokerInfo;
+  }
+
+  static Future<List<HouseSaleBrokerInfo>> fetchHouseSaleBrokerData(
+      {latitude, longitude, serviceId}) async {
+    debugPrint(
+        '================================> here is a fetchHouseSaleBrokerData');
+    var brokerInfo = <HouseSaleBrokerInfo>[];
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      var token = prefs.getString('token') ?? '';
+      var headers = {'x-auth-token': token};
+      var request = http.Request(
+          'GET',
+          Uri.parse(
+              '$prodomain/api/broker/filter?serviceId=$serviceId&latitude=$latitude&longitude=$longitude'));
+      request.headers.addAll(headers);
+      http.StreamedResponse response = await request.send();
+      if (response.statusCode == 200) {
+        final List<dynamic> responseData =
+            json.decode(await response.stream.bytesToString());
+        if (responseData != []) {
+          for (var item in responseData) {
+            brokerInfo.add(HouseSaleBrokerInfo.fromJson(item));
+          }
+        }
+      }
+    } catch (e, s) {
+      printLog('fetchBrokerData Exception: $e' 'StackTrace:' '$s');
+    }
+    return brokerInfo;
+  }
+
+  static Future<List<HouseRantBrokerInfo>> fetchHouseRantBrokerData(
+      {latitude, longitude, serviceId}) async {
+    debugPrint(
+        '================================> here is a fetchHouseRantBrokerData');
+    var brokerInfo = <HouseRantBrokerInfo>[];
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      var token = prefs.getString('token') ?? '';
+      var headers = {'x-auth-token': token};
+      var request = http.Request(
+          'GET',
+          Uri.parse(
+              '$prodomain/api/broker/filter?serviceId=$serviceId&latitude=$latitude&longitude=$longitude'));
+      request.headers.addAll(headers);
+      http.StreamedResponse response = await request.send();
+      if (response.statusCode == 200) {
+        final List<dynamic> responseData =
+            json.decode(await response.stream.bytesToString());
+        if (responseData != []) {
+          for (var item in responseData) {
+            brokerInfo.add(HouseRantBrokerInfo.fromJson(item));
+          }
+        }
+      }
+    } catch (e, s) {
+      printLog('fetchBrokerData Exception: $e' 'StackTrace:' '$s');
+    }
+    return brokerInfo;
+  }
+
+  static Future<List<HouseMaidBrokerInfo>> fetchHouseMaidBrokerData(
+      {latitude, longitude, serviceId}) async {
+    debugPrint(
+        '================================> here is a fetchHouseMaidBrokerData');
+    var brokerInfo = <HouseMaidBrokerInfo>[];
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      var token = prefs.getString('token') ?? '';
+      var headers = {'x-auth-token': token};
+      var request = http.Request(
+          'GET',
+          Uri.parse(
+              '$prodomain/api/broker/filter?serviceId=$serviceId&latitude=$latitude&longitude=$longitude'));
+      request.headers.addAll(headers);
+      http.StreamedResponse response = await request.send();
+      if (response.statusCode == 200) {
+        final List<dynamic> responseData =
+            json.decode(await response.stream.bytesToString());
+        if (responseData != []) {
+          for (var item in responseData) {
+            brokerInfo.add(HouseMaidBrokerInfo.fromJson(item));
+          }
+        }
+      }
+    } catch (e, s) {
+      printLog('fetchBrokerData Exception: $e' 'StackTrace:' '$s');
+    }
+    return brokerInfo;
+  }
+
+  static Future<List<CarSaleBrokerInfo>> fetchCarSaleBrokerData(
+      {latitude, longitude, serviceId}) async {
+    debugPrint(
+        '================================> here is a fetchCarSaleBrokerData');
+    var brokerInfo = <CarSaleBrokerInfo>[];
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      var token = prefs.getString('token') ?? '';
+      var headers = {'x-auth-token': token};
+      var request = http.Request(
+          'GET',
+          Uri.parse(
+              '$prodomain/api/broker/filter?serviceId=$serviceId&latitude=$latitude&longitude=$longitude'));
+      request.headers.addAll(headers);
+      http.StreamedResponse response = await request.send();
+      if (response.statusCode == 200) {
+        final List<dynamic> responseData =
+            json.decode(await response.stream.bytesToString());
+        if (responseData != []) {
+          for (var item in responseData) {
+            brokerInfo.add(CarSaleBrokerInfo.fromJson(item));
+          }
+        }
+      }
+    } catch (e, s) {
+      printLog('fetchBrokerData Exception: $e' 'StackTrace:' '$s');
+    }
+    return brokerInfo;
+  }
+
+  static Future<List<CarRentBrokerInfo>> fetchCarRantBrokerData(
+      {latitude, longitude, serviceId}) async {
+    debugPrint(
+        '================================> here is a fetchCarRantBrokerData');
+    var brokerInfo = <CarRentBrokerInfo>[];
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      var token = prefs.getString('token') ?? '';
+      var headers = {'x-auth-token': token};
+      var request = http.Request(
+          'GET',
+          Uri.parse(
+              '$prodomain/api/broker/filter?serviceId=$serviceId&latitude=$latitude&longitude=$longitude'));
+      request.headers.addAll(headers);
+      http.StreamedResponse response = await request.send();
+      if (response.statusCode == 200) {
+        final List<dynamic> responseData =
+            json.decode(await response.stream.bytesToString());
+        if (responseData != []) {
+          for (var item in responseData) {
+            brokerInfo.add(CarRentBrokerInfo.fromJson(item));
+          }
+        }
+      }
+    } catch (e, s) {
+      printLog('fetchBrokerData Exception: $e' 'StackTrace:' '$s');
+    }
+    return brokerInfo;
+  }
+
+  static Future<List<UsedItemBrokerInfo>> fetchUsedItemBrokerData(
+      {latitude, longitude, serviceId}) async {
+    debugPrint(
+        '================================> here is a fetchUsedItemBrokerData');
+    var brokerInfo = <UsedItemBrokerInfo>[];
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      var token = prefs.getString('token') ?? '';
+      var headers = {'x-auth-token': token};
+      var request = http.Request(
+          'GET',
+          Uri.parse(
+              '$prodomain/api/broker/filter?serviceId=$serviceId&latitude=$latitude&longitude=$longitude'));
+      request.headers.addAll(headers);
+      http.StreamedResponse response = await request.send();
+      if (response.statusCode == 200) {
+        final List<dynamic> responseData =
+            json.decode(await response.stream.bytesToString());
+        if (responseData != []) {
+          for (var item in responseData) {
+            brokerInfo.add(UsedItemBrokerInfo.fromJson(item));
+          }
+        }
       }
     } catch (e, s) {
       printLog('fetchBrokerData Exception: $e' 'StackTrace:' '$s');
@@ -554,10 +742,10 @@ class ApiAuthHelper {
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
       if (response.statusCode == 200) {
-        print(await response.stream.bytesToString());
+        debugPrint(await response.stream.bytesToString());
         return true;
       } else {
-        print(
+        debugPrint(
             'Request for cancel is not done => $prodomain/api/users/connection/cancel/$cennectionId');
         return false;
       }

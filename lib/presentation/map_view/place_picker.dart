@@ -6,11 +6,13 @@ import 'dart:math' show Random;
 import 'package:delalochu/core/app_export.dart';
 import 'package:delalochu/core/utils/progress_dialog_utils.dart';
 import 'package:delalochu/domain/apiauthhelpers/apiauth.dart';
+import 'package:delalochu/presentation/homescreen_screen/provider/homescreen_provider.dart';
 import 'package:delalochu/presentation/map_view/model/broker_request_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
@@ -22,6 +24,7 @@ import '../../widgets/custom_dialog.dart';
 import 'model/broker_info_model.dart';
 import 'model/check_request_usingConnection.dart';
 import 'package:html/parser.dart' show parse;
+import 'dart:ui' as ui;
 
 /// A UUID generator.
 ///
@@ -154,6 +157,9 @@ class PlacePickerState extends State<PlacePicker> {
         markerId: MarkerId('selected-location'),
       ),
     );
+  late HomescreenProvider homescreenProvider;
+  BitmapDescriptor? brokerIcon;
+  BitmapDescriptor? userIcon;
 
   /// Result returned after user completes selection
   LocationResult? locationResult;
@@ -299,14 +305,12 @@ class PlacePickerState extends State<PlacePicker> {
         _requestStreamController.addError('');
       }
     } catch (e, s) {
-      print(' _fetchUserRequests Error: $e StackTres => $s');
+      debugPrint(' _fetchUserRequests Error: $e StackTres => $s');
       return;
     }
   }
 
   getBrokers({latitude, longitude}) async {
-    print(
-        '======================> you are now in the getBrokers method =================');
     setState(() {
       PrefUtils.sharedPreferences!.setBool('isConnectiong', false);
       isConnectiong = false;
@@ -321,8 +325,6 @@ class PlacePickerState extends State<PlacePicker> {
         latitude == '' ? locationData.latitude : latitude,
         longitude == '' ? locationData.longitude : longitude,
       ).then((placeId) {
-        print(
-            '======================>  you are now in the place id searching for place name');
         if (placeId != null) {
           decodeAndSelectPlaceForFirst(placeId);
         }
@@ -342,10 +344,11 @@ class PlacePickerState extends State<PlacePicker> {
                 listofbrokers[i].locationLatitude ?? 0.0,
                 listofbrokers[i].locationLongtude ?? 0.0,
               ),
-              icon: await BitmapDescriptor.fromAssetImage(
-                ImageConfiguration(),
-                'assets/images/markerImage.png',
-              ),
+              icon: brokerIcon ??
+                  await BitmapDescriptor.fromAssetImage(
+                    ImageConfiguration(),
+                    'assets/images/markerImage.png',
+                  ),
               markerId: MarkerId('${listofbrokers[i].id}'),
               onTap: () {
                 if (PrefUtils.sharedPreferences!.getBool('isConnectiong') ==
@@ -378,7 +381,6 @@ class PlacePickerState extends State<PlacePicker> {
             'There are ${listofbrokers.length} Brokers available around $placeName');
         if (!mounted) return;
         setState(() {});
-        // Future.delayed(Duration.zero).then((value) {});
       } else {
         ProgressDialogUtils.hideProgressDialog();
         PrefUtils.sharedPreferences!.setBool('isSearching', true);
@@ -389,7 +391,7 @@ class PlacePickerState extends State<PlacePicker> {
         setState(() {});
       }
     }).catchError((e) {
-      print('Error getting location: ====> $e');
+      debugPrint('Error getting location: ====> $e');
       ProgressDialogUtils.hideProgressDialog();
       return;
     });
@@ -397,6 +399,574 @@ class PlacePickerState extends State<PlacePicker> {
       if (!mounted) return;
       setState(() {});
     });
+  }
+
+  Future<Uint8List> getBytesFromAsset(String path, int width) async {
+    ByteData data = await rootBundle.load(path);
+    ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(),
+        targetWidth: width);
+    ui.FrameInfo fi = await codec.getNextFrame();
+    return (await fi.image.toByteData(format: ui.ImageByteFormat.png))!
+        .buffer
+        .asUint8List();
+  }
+
+  initMarker() async {
+    final Uint8List userMarkerIcon =
+        await getBytesFromAsset(ImageConstant.currentuserlocation, 300);
+    final Uint8List markerIcon =
+        await getBytesFromAsset('assets/images/markerImage.png', 300);
+    setState(() {
+      userIcon = BitmapDescriptor.fromBytes(userMarkerIcon);
+      brokerIcon = BitmapDescriptor.fromBytes(markerIcon);
+    });
+    Future.delayed(Duration.zero).then((value) {
+      if (!mounted) return;
+      setState(() {});
+    });
+  }
+
+  setMarkerForCustomer() {
+    getCurrentLocation().then((value) async {
+      marker.add(
+        Marker(
+          position: LatLng(
+            value.latitude ?? 0.0,
+            value.longitude ?? 0.0,
+          ),
+          icon: userIcon ??
+              await BitmapDescriptor.fromAssetImage(
+                ImageConfiguration(size: ui.Size.fromWidth(300)),
+                ImageConstant.currentuserlocation,
+              ),
+          markerId: MarkerId('userId01'),
+          infoWindow: InfoWindow(
+            title: 'Your current location',
+          ),
+        ),
+      );
+      getPlaceId(
+        value.latitude ?? 0.0,
+        value.longitude ?? 0.0,
+      ).then((placeId) {
+        if (placeId != null) {
+          decodeAndSelectPlaceForFirst(placeId);
+        }
+      });
+    });
+  }
+
+  setInitialMarkersBasedOnBorkersLocations() async {
+    marker.clear();
+    setMarkerForCustomer();
+    Future.delayed(Duration(seconds: 1)).then((value) {
+      setMarkerForCustomer();
+    });
+    switch (widget.selectedserviceId ?? '1') {
+      case '1':
+        if (homescreenProvider.ishouseSaleBrokerInfoLoading) {
+          ProgressDialogUtils.showProgressDialog(
+            context: context,
+            isCancellable: false,
+          );
+          Future.delayed(Duration(seconds: 1)).then((value) {
+            setInitialMarkersBasedOnBorkersLocations();
+          });
+        } else {
+          ProgressDialogUtils.hideProgressDialog();
+          if (homescreenProvider.houseSaleBrokerInfo.isNotEmpty ||
+              homescreenProvider.houseSaleBrokerInfo.length > 0) {
+            for (var i = 0;
+                i < homescreenProvider.houseSaleBrokerInfo.length;
+                i++) {
+              marker.add(
+                Marker(
+                  position: LatLng(
+                    homescreenProvider
+                            .houseSaleBrokerInfo[i].locationLatitude ??
+                        0.0,
+                    homescreenProvider
+                            .houseSaleBrokerInfo[i].locationLongtude ??
+                        0.0,
+                  ),
+                  icon: brokerIcon ??
+                      await BitmapDescriptor.fromAssetImage(
+                        ImageConfiguration(size: ui.Size.fromWidth(300)),
+                        'assets/images/markerImage.png',
+                      ),
+                  markerId: MarkerId(
+                      '${homescreenProvider.houseSaleBrokerInfo[i].id}'),
+                  onTap: () {
+                    if (PrefUtils.sharedPreferences!.getBool('isConnectiong') ==
+                        true) {
+                      ProgressDialogUtils.showSnackBar(
+                          context: context,
+                          message:
+                              "You have requested already. Please wait for the response or cancel the request");
+                    } else {
+                      setState(() {
+                        fullname = homescreenProvider
+                                .houseSaleBrokerInfo[i].fullName ??
+                            "";
+                        rate =
+                            homescreenProvider.houseSaleBrokerInfo[i].rate ?? 0;
+                        hasCar =
+                            homescreenProvider.houseSaleBrokerInfo[i].hasCar ??
+                                false;
+                        selectedbrokerId = homescreenProvider
+                            .houseSaleBrokerInfo[i].id
+                            .toString();
+                        phoneNumber =
+                            homescreenProvider.houseSaleBrokerInfo[i].phone ??
+                                "";
+                        isBrokerSelected = true;
+                      });
+                    }
+                  },
+                  infoWindow: InfoWindow(
+                    title:
+                        '${homescreenProvider.houseSaleBrokerInfo[i].fullName}',
+                  ),
+                ),
+              );
+            }
+            ProgressDialogUtils.hideProgressDialog();
+            PrefUtils.sharedPreferences!.setBool('isSearching', true);
+            PrefUtils.sharedPreferences!.remove('description');
+            PrefUtils.sharedPreferences!.setString('description',
+                'There are ${homescreenProvider.houseSaleBrokerInfo.length} Brokers available around $placeName');
+            if (!mounted) return;
+            setState(() {});
+          } else {
+            ProgressDialogUtils.hideProgressDialog();
+            PrefUtils.sharedPreferences!.setBool('isSearching', true);
+            PrefUtils.sharedPreferences!.remove('description');
+            PrefUtils.sharedPreferences!.setString('description',
+                'There are no brokers available around $placeName. Please search another place!');
+            if (!mounted) return;
+            setState(() {});
+          }
+        }
+        break;
+      case '2':
+        if (homescreenProvider.ishouseRantBrokerInfoLoading) {
+          ProgressDialogUtils.showProgressDialog(
+            context: context,
+            isCancellable: false,
+          );
+          Future.delayed(Duration(seconds: 1)).then((value) {
+            setInitialMarkersBasedOnBorkersLocations();
+          });
+        } else {
+          ProgressDialogUtils.hideProgressDialog();
+          if (homescreenProvider.houseRantBrokerInfo.isNotEmpty ||
+              homescreenProvider.houseRantBrokerInfo.length > 0) {
+            for (var i = 0;
+                i < homescreenProvider.houseRantBrokerInfo.length;
+                i++) {
+              marker.add(
+                Marker(
+                  position: LatLng(
+                    homescreenProvider
+                            .houseRantBrokerInfo[i].locationLatitude ??
+                        0.0,
+                    homescreenProvider
+                            .houseRantBrokerInfo[i].locationLongtude ??
+                        0.0,
+                  ),
+                  icon: brokerIcon ??
+                      await BitmapDescriptor.fromAssetImage(
+                        ImageConfiguration(size: ui.Size.fromWidth(300)),
+                        'assets/images/markerImage.png',
+                      ),
+                  markerId: MarkerId(
+                      '${homescreenProvider.houseRantBrokerInfo[i].id}'),
+                  onTap: () {
+                    if (PrefUtils.sharedPreferences!.getBool('isConnectiong') ==
+                        true) {
+                      ProgressDialogUtils.showSnackBar(
+                          context: context,
+                          message:
+                              "You have requested already. Please wait for the response or cancel the request");
+                    } else {
+                      setState(() {
+                        fullname = homescreenProvider
+                                .houseRantBrokerInfo[i].fullName ??
+                            "";
+                        rate =
+                            homescreenProvider.houseRantBrokerInfo[i].rate ?? 0;
+                        hasCar =
+                            homescreenProvider.houseRantBrokerInfo[i].hasCar ??
+                                false;
+                        selectedbrokerId = homescreenProvider
+                            .houseRantBrokerInfo[i].id
+                            .toString();
+                        phoneNumber =
+                            homescreenProvider.houseRantBrokerInfo[i].phone ??
+                                "";
+                        isBrokerSelected = true;
+                      });
+                    }
+                  },
+                  infoWindow: InfoWindow(
+                    title:
+                        '${homescreenProvider.houseRantBrokerInfo[i].fullName}',
+                  ),
+                ),
+              );
+            }
+            ProgressDialogUtils.hideProgressDialog();
+            PrefUtils.sharedPreferences!.setBool('isSearching', true);
+            PrefUtils.sharedPreferences!.remove('description');
+            PrefUtils.sharedPreferences!.setString('description',
+                'There are ${homescreenProvider.houseRantBrokerInfo.length} Brokers available around $placeName');
+            if (!mounted) return;
+            setState(() {});
+          } else {
+            ProgressDialogUtils.hideProgressDialog();
+            PrefUtils.sharedPreferences!.setBool('isSearching', true);
+            PrefUtils.sharedPreferences!.remove('description');
+            PrefUtils.sharedPreferences!.setString('description',
+                'There are no brokers available around $placeName. Please search another place!');
+            if (!mounted) return;
+            setState(() {});
+          }
+        }
+        break;
+      case '3':
+        if (homescreenProvider.iscarSaleBrokerinfoLoading) {
+          ProgressDialogUtils.showProgressDialog(
+            context: context,
+            isCancellable: false,
+          );
+          Future.delayed(Duration(seconds: 1)).then((value) {
+            setInitialMarkersBasedOnBorkersLocations();
+          });
+        } else {
+          ProgressDialogUtils.hideProgressDialog();
+          if (homescreenProvider.carSaleBrokerinfo.isNotEmpty ||
+              homescreenProvider.carSaleBrokerinfo.length > 0) {
+            for (var i = 0;
+                i < homescreenProvider.carSaleBrokerinfo.length;
+                i++) {
+              marker.add(
+                Marker(
+                  position: LatLng(
+                    homescreenProvider.carSaleBrokerinfo[i].locationLatitude ??
+                        0.0,
+                    homescreenProvider.carSaleBrokerinfo[i].locationLongtude ??
+                        0.0,
+                  ),
+                  icon: brokerIcon ??
+                      await BitmapDescriptor.fromAssetImage(
+                        ImageConfiguration(size: ui.Size.fromWidth(300)),
+                        'assets/images/markerImage.png',
+                      ),
+                  markerId:
+                      MarkerId('${homescreenProvider.carSaleBrokerinfo[i].id}'),
+                  onTap: () {
+                    if (PrefUtils.sharedPreferences!.getBool('isConnectiong') ==
+                        true) {
+                      ProgressDialogUtils.showSnackBar(
+                          context: context,
+                          message:
+                              "You have requested already. Please wait for the response or cancel the request");
+                    } else {
+                      setState(() {
+                        fullname =
+                            homescreenProvider.carSaleBrokerinfo[i].fullName ??
+                                "";
+                        rate =
+                            homescreenProvider.carSaleBrokerinfo[i].rate ?? 0;
+                        hasCar =
+                            homescreenProvider.carSaleBrokerinfo[i].hasCar ??
+                                false;
+                        selectedbrokerId = homescreenProvider
+                            .carSaleBrokerinfo[i].id
+                            .toString();
+                        phoneNumber =
+                            homescreenProvider.carSaleBrokerinfo[i].phone ?? "";
+                        isBrokerSelected = true;
+                      });
+                    }
+                  },
+                  infoWindow: InfoWindow(
+                    title:
+                        '${homescreenProvider.carSaleBrokerinfo[i].fullName}',
+                  ),
+                ),
+              );
+            }
+            ProgressDialogUtils.hideProgressDialog();
+            PrefUtils.sharedPreferences!.setBool('isSearching', true);
+            PrefUtils.sharedPreferences!.remove('description');
+            PrefUtils.sharedPreferences!.setString('description',
+                'There are ${homescreenProvider.carSaleBrokerinfo.length} Brokers available around $placeName');
+            if (!mounted) return;
+            setState(() {});
+          } else {
+            ProgressDialogUtils.hideProgressDialog();
+            PrefUtils.sharedPreferences!.setBool('isSearching', true);
+            PrefUtils.sharedPreferences!.remove('description');
+            PrefUtils.sharedPreferences!.setString('description',
+                'There are no brokers available around $placeName. Please search another place!');
+            if (!mounted) return;
+            setState(() {});
+          }
+        }
+        break;
+      case '4':
+        if (homescreenProvider.iscarRentBrokerinfoLoading) {
+          ProgressDialogUtils.showProgressDialog(
+            context: context,
+            isCancellable: false,
+          );
+          Future.delayed(Duration(seconds: 1)).then((value) {
+            setInitialMarkersBasedOnBorkersLocations();
+          });
+        } else {
+          ProgressDialogUtils.hideProgressDialog();
+          if (homescreenProvider.carRentBrokerinfo.isNotEmpty ||
+              homescreenProvider.carRentBrokerinfo.length > 0) {
+            for (var i = 0;
+                i < homescreenProvider.carRentBrokerinfo.length;
+                i++) {
+              marker.add(
+                Marker(
+                  position: LatLng(
+                    homescreenProvider.carRentBrokerinfo[i].locationLatitude ??
+                        0.0,
+                    homescreenProvider.carRentBrokerinfo[i].locationLongtude ??
+                        0.0,
+                  ),
+                  icon: brokerIcon ??
+                      await BitmapDescriptor.fromAssetImage(
+                        ImageConfiguration(size: ui.Size.fromWidth(300)),
+                        'assets/images/markerImage.png',
+                      ),
+                  markerId:
+                      MarkerId('${homescreenProvider.carRentBrokerinfo[i].id}'),
+                  onTap: () {
+                    if (PrefUtils.sharedPreferences!.getBool('isConnectiong') ==
+                        true) {
+                      ProgressDialogUtils.showSnackBar(
+                          context: context,
+                          message:
+                              "You have requested already. Please wait for the response or cancel the request");
+                    } else {
+                      setState(() {
+                        fullname =
+                            homescreenProvider.carRentBrokerinfo[i].fullName ??
+                                "";
+                        rate =
+                            homescreenProvider.carRentBrokerinfo[i].rate ?? 0;
+                        hasCar =
+                            homescreenProvider.carRentBrokerinfo[i].hasCar ??
+                                false;
+                        selectedbrokerId = homescreenProvider
+                            .carRentBrokerinfo[i].id
+                            .toString();
+                        phoneNumber =
+                            homescreenProvider.carRentBrokerinfo[i].phone ?? "";
+                        isBrokerSelected = true;
+                      });
+                    }
+                  },
+                  infoWindow: InfoWindow(
+                    title:
+                        '${homescreenProvider.carRentBrokerinfo[i].fullName}',
+                  ),
+                ),
+              );
+            }
+            ProgressDialogUtils.hideProgressDialog();
+            PrefUtils.sharedPreferences!.setBool('isSearching', true);
+            PrefUtils.sharedPreferences!.remove('description');
+            PrefUtils.sharedPreferences!.setString('description',
+                'There are ${homescreenProvider.carRentBrokerinfo.length} Brokers available around $placeName');
+            if (!mounted) return;
+            setState(() {});
+          } else {
+            ProgressDialogUtils.hideProgressDialog();
+            PrefUtils.sharedPreferences!.setBool('isSearching', true);
+            PrefUtils.sharedPreferences!.remove('description');
+            PrefUtils.sharedPreferences!.setString('description',
+                'There are no brokers available around $placeName. Please search another place!');
+            if (!mounted) return;
+            setState(() {});
+          }
+        }
+        break;
+      case '5':
+        if (homescreenProvider.ishouseMaidBrokerInfoLoading) {
+          ProgressDialogUtils.showProgressDialog(
+            context: context,
+            isCancellable: false,
+          );
+          Future.delayed(Duration(seconds: 1)).then((value) {
+            setInitialMarkersBasedOnBorkersLocations();
+          });
+        } else {
+          ProgressDialogUtils.hideProgressDialog();
+          if (homescreenProvider.houseMaidBrokerInfo.isNotEmpty ||
+              homescreenProvider.houseMaidBrokerInfo.length > 0) {
+            for (var i = 0;
+                i < homescreenProvider.houseMaidBrokerInfo.length;
+                i++) {
+              marker.add(
+                Marker(
+                  position: LatLng(
+                    homescreenProvider
+                            .houseMaidBrokerInfo[i].locationLatitude ??
+                        0.0,
+                    homescreenProvider
+                            .houseMaidBrokerInfo[i].locationLongtude ??
+                        0.0,
+                  ),
+                  icon: brokerIcon ??
+                      await BitmapDescriptor.fromAssetImage(
+                        ImageConfiguration(size: ui.Size.fromWidth(300)),
+                        'assets/images/markerImage.png',
+                      ),
+                  markerId: MarkerId(
+                      '${homescreenProvider.houseMaidBrokerInfo[i].id}'),
+                  onTap: () {
+                    if (PrefUtils.sharedPreferences!.getBool('isConnectiong') ==
+                        true) {
+                      ProgressDialogUtils.showSnackBar(
+                          context: context,
+                          message:
+                              "You have requested already. Please wait for the response or cancel the request");
+                    } else {
+                      setState(() {
+                        fullname = homescreenProvider
+                                .houseMaidBrokerInfo[i].fullName ??
+                            "";
+                        rate =
+                            homescreenProvider.houseMaidBrokerInfo[i].rate ?? 0;
+                        hasCar =
+                            homescreenProvider.houseMaidBrokerInfo[i].hasCar ??
+                                false;
+                        selectedbrokerId = homescreenProvider
+                            .houseMaidBrokerInfo[i].id
+                            .toString();
+                        phoneNumber =
+                            homescreenProvider.houseMaidBrokerInfo[i].phone ??
+                                "";
+                        isBrokerSelected = true;
+                      });
+                    }
+                  },
+                  infoWindow: InfoWindow(
+                    title:
+                        '${homescreenProvider.houseMaidBrokerInfo[i].fullName}',
+                  ),
+                ),
+              );
+            }
+            ProgressDialogUtils.hideProgressDialog();
+            PrefUtils.sharedPreferences!.setBool('isSearching', true);
+            PrefUtils.sharedPreferences!.remove('description');
+            PrefUtils.sharedPreferences!.setString('description',
+                'There are ${homescreenProvider.houseMaidBrokerInfo.length} Brokers available around $placeName');
+            if (!mounted) return;
+            setState(() {});
+          } else {
+            ProgressDialogUtils.hideProgressDialog();
+            PrefUtils.sharedPreferences!.setBool('isSearching', true);
+            PrefUtils.sharedPreferences!.remove('description');
+            PrefUtils.sharedPreferences!.setString('description',
+                'There are no brokers available around $placeName. Please search another place!');
+            if (!mounted) return;
+            setState(() {});
+          }
+        }
+        break;
+      case '6':
+        if (homescreenProvider.isusedItemBrokerInfoLoading) {
+          ProgressDialogUtils.showProgressDialog(
+            context: context,
+            isCancellable: false,
+          );
+          Future.delayed(Duration(seconds: 1)).then((value) {
+            setInitialMarkersBasedOnBorkersLocations();
+          });
+        } else {
+          ProgressDialogUtils.hideProgressDialog();
+          if (homescreenProvider.usedItemBrokerInfo.isNotEmpty ||
+              homescreenProvider.usedItemBrokerInfo.length > 0) {
+            for (var i = 0;
+                i < homescreenProvider.usedItemBrokerInfo.length;
+                i++) {
+              marker.add(
+                Marker(
+                  position: LatLng(
+                    homescreenProvider.usedItemBrokerInfo[i].locationLatitude ??
+                        0.0,
+                    homescreenProvider.usedItemBrokerInfo[i].locationLongtude ??
+                        0.0,
+                  ),
+                  icon: brokerIcon ??
+                      await BitmapDescriptor.fromAssetImage(
+                        ImageConfiguration(size: ui.Size.fromWidth(300)),
+                        'assets/images/markerImage.png',
+                      ),
+                  markerId: MarkerId(
+                      '${homescreenProvider.usedItemBrokerInfo[i].id}'),
+                  onTap: () {
+                    if (PrefUtils.sharedPreferences!.getBool('isConnectiong') ==
+                        true) {
+                      ProgressDialogUtils.showSnackBar(
+                          context: context,
+                          message:
+                              "You have requested already. Please wait for the response or cancel the request");
+                    } else {
+                      setState(() {
+                        fullname =
+                            homescreenProvider.usedItemBrokerInfo[i].fullName ??
+                                "";
+                        rate =
+                            homescreenProvider.usedItemBrokerInfo[i].rate ?? 0;
+                        hasCar =
+                            homescreenProvider.usedItemBrokerInfo[i].hasCar ??
+                                false;
+                        selectedbrokerId = homescreenProvider
+                            .usedItemBrokerInfo[i].id
+                            .toString();
+                        phoneNumber =
+                            homescreenProvider.usedItemBrokerInfo[i].phone ??
+                                "";
+                        isBrokerSelected = true;
+                      });
+                    }
+                  },
+                  infoWindow: InfoWindow(
+                    title:
+                        '${homescreenProvider.usedItemBrokerInfo[i].fullName}',
+                  ),
+                ),
+              );
+            }
+            ProgressDialogUtils.hideProgressDialog();
+            PrefUtils.sharedPreferences!.setBool('isSearching', true);
+            PrefUtils.sharedPreferences!.remove('description');
+            PrefUtils.sharedPreferences!.setString('description',
+                'There are ${homescreenProvider.usedItemBrokerInfo.length} Brokers available around $placeName');
+            if (!mounted) return;
+            setState(() {});
+          } else {
+            ProgressDialogUtils.hideProgressDialog();
+            PrefUtils.sharedPreferences!.setBool('isSearching', true);
+            PrefUtils.sharedPreferences!.remove('description');
+            PrefUtils.sharedPreferences!.setString('description',
+                'There are no brokers available around $placeName. Please search another place!');
+            if (!mounted) return;
+            setState(() {});
+          }
+        }
+        break;
+      default:
+    }
   }
 
   @override
@@ -408,11 +978,16 @@ class PlacePickerState extends State<PlacePicker> {
 
   @override
   void initState() {
-    getBrokers(latitude: '', longitude: '');
+    super.initState();
     PrefUtils().init();
     _requestStreamController =
         StreamController<CheckForCustomerRequestModel>.broadcast();
-    super.initState();
+    homescreenProvider =
+        Provider.of<HomescreenProvider>(context, listen: false);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      initMarker();
+      setInitialMarkersBasedOnBorkersLocations();
+    });
   }
 
   @override
@@ -425,10 +1000,6 @@ class PlacePickerState extends State<PlacePicker> {
 
   @override
   Widget build(BuildContext context) {
-    //initPrefs();
-
-    // bool controll = prefs.getBool('isConnectiong')!;
-    // print('controll $controll');
     return WillPopScope(
       onWillPop: () async {
         if (PrefUtils.sharedPreferences!.getBool('isConnectiong') == true) {
@@ -466,451 +1037,451 @@ class PlacePickerState extends State<PlacePicker> {
           automaticallyImplyLeading: false,
         ),
         backgroundColor: Theme.of(context).colorScheme.background,
-        body: Stack(
-          children: [
-            Column(
-              children: <Widget>[
-                Expanded(
-                  child: PrefUtils.sharedPreferences!
-                              .getBool('isConnectiong') ==
-                          true
-                      ? GoogleMap(
-                          initialCameraPosition: CameraPosition(
-                            target: initialTarget,
-                            zoom: 50,
-                            bearing: 50,
+        body: Consumer<HomescreenProvider>(
+          builder: (context, homePageProvider, child) => Stack(
+            children: [
+              Column(
+                children: <Widget>[
+                  Expanded(
+                    child: PrefUtils.sharedPreferences!
+                                .getBool('isConnectiong') ==
+                            true
+                        ? GoogleMap(
+                            initialCameraPosition: CameraPosition(
+                              target: initialTarget,
+                              zoom: 50,
+                              bearing: 50,
+                            ),
+                            myLocationButtonEnabled: true,
+                            myLocationEnabled: true,
+                            onMapCreated: onMapCreated,
+                            mapType: MapType.terrain, // Make the map dark
+                            gestureRecognizers: Set()
+                              ..add(Factory<OneSequenceGestureRecognizer>(() =>
+                                  EagerGestureRecognizer())), // Disable all gestures
+                            markers: Set<Marker>.of(marker),
+                            liteModeEnabled:
+                                true, // Optionally enable lite mode
+                          )
+                        : GoogleMap(
+                            initialCameraPosition: CameraPosition(
+                              target: initialTarget,
+                              zoom: 15,
+                              bearing: 50,
+                            ),
+                            myLocationButtonEnabled:
+                                false, // Optionally enable my location button
+                            myLocationEnabled:
+                                false, // Optionally enable my location
+                            mapToolbarEnabled:
+                                false, // Optionally enable map toolbar
+                            compassEnabled: false, // Optionally enable compass
+                            onMapCreated: onMapCreated,
+                            markers: Set<Marker>.of(marker),
                           ),
-                          myLocationButtonEnabled: true,
-                          myLocationEnabled: true,
-                          onMapCreated: onMapCreated,
-                          mapType: MapType.terrain, // Make the map dark
-                          gestureRecognizers: Set()
-                            ..add(Factory<OneSequenceGestureRecognizer>(() =>
-                                EagerGestureRecognizer())), // Disable all gestures
-                          markers: Set<Marker>.of(marker),
-                          liteModeEnabled: true, // Optionally enable lite mode
-                        )
-                      : GoogleMap(
-                          initialCameraPosition: CameraPosition(
-                            target: initialTarget,
-                            zoom: 19,
-                            bearing: 50,
-                          ),
-                          myLocationButtonEnabled: true,
-                          myLocationEnabled: true,
-                          onMapCreated: onMapCreated,
-                          // onTap: (latLng) {
-                          //   clearOverlay();
-                          //   moveToLocation(latLng);
-                          // },
-                          markers: Set<Marker>.of(marker),
-                        ),
-                ),
-                if (PrefUtils.sharedPreferences!.getBool('isConnectiong') ==
-                    false) ...[
-                  hasSearchTerm
-                      ? const SizedBox()
-                      : isBrokerSelected
-                          ? Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: ResponsiveExtension(15).h,
-                                vertical: 25.v,
-                              ),
-                              decoration: AppDecoration.outlineWhite.copyWith(
-                                borderRadius:
-                                    BorderRadiusStyle.customBorderTL25,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceAround,
-                                children: <Widget>[
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      CustomImageView(
-                                        imagePath: ImageConstant.imageNotFound,
-                                        border: Border.all(
-                                          color: appTheme.orangeA200,
-                                          width: 1,
-                                        ),
-                                        height: 60.adaptSize,
-                                        width: 60.adaptSize,
-                                        radius: BorderRadius.circular(
-                                          30.h,
-                                        ),
-                                      ),
-                                      SizedBox(width: 20),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceAround,
-                                            children: [
-                                              Text(
-                                                fullname,
-                                                style: const TextStyle(
-                                                  color: Colors.grey,
-                                                  fontSize: 15,
-                                                ),
-                                              ),
-                                              SizedBox(width: 20),
-                                              hasCar
-                                                  ? CustomImageView(
-                                                      imagePath:
-                                                          ImageConstant.car,
-                                                      height: 14.adaptSize,
-                                                      width: 19.adaptSize,
-                                                    )
-                                                  : SizedBox(),
-                                            ],
+                  ),
+                  if (PrefUtils.sharedPreferences!.getBool('isConnectiong') ==
+                      false) ...[
+                    hasSearchTerm
+                        ? const SizedBox()
+                        : isBrokerSelected
+                            ? Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: ResponsiveExtension(15).h,
+                                  vertical: 25.v,
+                                ),
+                                decoration: AppDecoration.outlineWhite.copyWith(
+                                  borderRadius:
+                                      BorderRadiusStyle.customBorderTL25,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
+                                  children: <Widget>[
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        CustomImageView(
+                                          imagePath:
+                                              ImageConstant.imageNotFound,
+                                          border: Border.all(
+                                            color: appTheme.orangeA200,
+                                            width: 1,
                                           ),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                rate.toString(),
-                                                style: const TextStyle(
-                                                  color: Colors.grey,
-                                                  fontSize: 15,
-                                                ),
-                                              ),
-                                              RatingBar.builder(
-                                                initialRating: rate.toDouble(),
-                                                itemSize: 30,
-                                                minRating: 1,
-                                                direction: Axis.horizontal,
-                                                allowHalfRating: true,
-                                                itemCount: 5,
-                                                itemPadding:
-                                                    EdgeInsets.symmetric(
-                                                  horizontal: 4.0,
-                                                ),
-                                                itemBuilder: (context, _) =>
-                                                    Icon(
-                                                  Icons.star,
-                                                  color: Colors.amber,
-                                                ),
-                                                onRatingUpdate: (rating) {
-                                                  print(rating);
-                                                },
-                                                ignoreGestures: true,
-                                              ),
-                                            ],
+                                          height: 60.adaptSize,
+                                          width: 60.adaptSize,
+                                          radius: BorderRadius.circular(
+                                            30.h,
                                           ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 20),
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 20.0),
-                                    child: PrefUtils.sharedPreferences!
-                                                .getBool('isConnectiong') ==
-                                            true
-                                        ? StreamBuilder<
-                                            CheckForCustomerRequestModel>(
-                                            stream:
-                                                _requestStreamController.stream,
-                                            builder: (context, snapshot) {
-                                              if (snapshot.hasData &&
-                                                  snapshot.data != null &&
-                                                  snapshot.data!
-                                                          .connectionRequests !=
-                                                      null &&
-                                                  snapshot
-                                                          .data!
-                                                          .connectionRequests!
-                                                          .status ==
-                                                      "REQUESTED") {
-                                                return Column(
-                                                  children: [
-                                                    Padding(
-                                                      padding: const EdgeInsets
-                                                          .symmetric(
-                                                        horizontal: 40.0,
-                                                      ),
-                                                      child: Text(
-                                                        'Waiting for broker response...',
-                                                        style: TextStyle(
-                                                          color: appTheme
-                                                              .orangeA200,
-                                                          fontSize: 16,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    SizedBox(height: 20),
-                                                    _builCancelButton(
-                                                      context,
-                                                      snapshot,
-                                                    ),
-                                                  ],
-                                                );
-                                              } else if (snapshot.hasData &&
-                                                  snapshot.data != null &&
-                                                  snapshot.data!
-                                                          .connectionRequests !=
-                                                      null &&
-                                                  snapshot
-                                                          .data!
-                                                          .connectionRequests!
-                                                          .status ==
-                                                      "ACCEPTED") {
-                                                return SizedBox();
-                                              } else if (snapshot.hasData &&
-                                                  snapshot.data != null &&
-                                                  snapshot.data!
-                                                          .connectionRequests !=
-                                                      null &&
-                                                  snapshot
-                                                          .data!
-                                                          .connectionRequests!
-                                                          .status ==
-                                                      "CANCELLED") {
-                                                return SizedBox();
-                                              } else if (snapshot.hasError) {
-                                                print(
-                                                    'object snapshot error: ${snapshot.error}');
-                                                return SizedBox();
-                                              } else if (snapshot
-                                                          .connectionState ==
-                                                      ConnectionState.waiting ||
-                                                  snapshot.connectionState ==
-                                                      ConnectionState.none) {
-                                                return SizedBox();
-                                              } else {
-                                                return SizedBox();
-                                              }
-                                            },
-                                          )
-                                        : InkWell(
-                                            onTap: () {
-                                              isCheckedtersm = !isCheckedtersm;
-                                              setState(() {});
-                                            },
-                                            child: Row(
-                                              children: <Widget>[
-                                                Checkbox(
-                                                  value: isCheckedtersm,
-                                                  activeColor:
-                                                      appTheme.orangeA200,
-                                                  checkColor: Colors.white,
-                                                  onChanged: (value) {
-                                                    isCheckedtersm =
-                                                        !isCheckedtersm;
-                                                    setState(() {});
-                                                  },
-                                                ),
-                                                RichText(
-                                                  maxLines: 2,
-                                                  text: TextSpan(
-                                                    text: 'Accept',
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .bodyLarge,
-                                                    children: <TextSpan>[
-                                                      const TextSpan(text: ' '),
-                                                      TextSpan(
-                                                        text:
-                                                            'Term & condition',
-                                                        style: TextStyle(
-                                                            color: appTheme
-                                                                .orangeA200,
-                                                            decoration:
-                                                                TextDecoration
-                                                                    .underline),
-                                                        recognizer:
-                                                            TapGestureRecognizer()
-                                                              ..onTap = () =>
-                                                                  Navigator
-                                                                      .push(
-                                                                    context,
-                                                                    MaterialPageRoute(
-                                                                      builder:
-                                                                          (context) =>
-                                                                              const PrivacyTermScreen(),
-                                                                    ),
-                                                                  ),
-                                                      ),
-                                                    ],
+                                        ),
+                                        SizedBox(width: 20),
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.spaceAround,
+                                              children: [
+                                                Text(
+                                                  fullname,
+                                                  style: const TextStyle(
+                                                    color: Colors.grey,
+                                                    fontSize: 15,
                                                   ),
+                                                ),
+                                                SizedBox(width: 20),
+                                                hasCar
+                                                    ? CustomImageView(
+                                                        imagePath:
+                                                            ImageConstant.car,
+                                                        height: 14.adaptSize,
+                                                        width: 19.adaptSize,
+                                                      )
+                                                    : SizedBox(),
+                                              ],
+                                            ),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  rate.toString(),
+                                                  style: const TextStyle(
+                                                    color: Colors.grey,
+                                                    fontSize: 15,
+                                                  ),
+                                                ),
+                                                RatingBar.builder(
+                                                  initialRating:
+                                                      rate.toDouble(),
+                                                  itemSize: 30,
+                                                  minRating: 1,
+                                                  direction: Axis.horizontal,
+                                                  allowHalfRating: true,
+                                                  itemCount: 5,
+                                                  itemPadding:
+                                                      EdgeInsets.symmetric(
+                                                    horizontal: 4.0,
+                                                  ),
+                                                  itemBuilder: (context, _) =>
+                                                      Icon(
+                                                    Icons.star,
+                                                    color: Colors.amber,
+                                                  ),
+                                                  onRatingUpdate: (rating) {
+                                                    debugPrint(
+                                                        rating.toString());
+                                                  },
+                                                  ignoreGestures: true,
                                                 ),
                                               ],
                                             ),
-                                          ),
-                                  ),
-                                  SizedBox(height: 20),
-                                  PrefUtils.sharedPreferences!
-                                              .getBool('isConnectiong') ==
-                                          true
-                                      ? SizedBox()
-                                      : _builConnectButton(context),
-                                ],
-                              ),
-                            )
-                          : SelectPlaceAction(getLocationName(), () {}),
-                ] else ...[
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: ResponsiveExtension(15).h,
-                      vertical: 25.v,
-                    ),
-                    decoration: AppDecoration.outlineWhite.copyWith(
-                      borderRadius: BorderRadiusStyle.customBorderTL25,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: <Widget>[
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            CustomImageView(
-                              imagePath: ImageConstant.imageNotFound,
-                              border: Border.all(
-                                color: appTheme.orangeA200,
-                                width: 1,
-                              ),
-                              height: 60.adaptSize,
-                              width: 60.adaptSize,
-                              radius: BorderRadius.circular(
-                                30.h,
-                              ),
-                            ),
-                            SizedBox(width: 20),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceAround,
-                                  children: [
-                                    Text(
-                                      PrefUtils.sharedPreferences!
-                                              .getString('fullname') ??
-                                          "",
-                                      style: const TextStyle(
-                                        color: Colors.grey,
-                                        fontSize: 15,
-                                      ),
+                                          ],
+                                        ),
+                                      ],
                                     ),
-                                    SizedBox(width: 20),
-                                    hasCar
-                                        ? CustomImageView(
-                                            imagePath: ImageConstant.car,
-                                            height: 14.adaptSize,
-                                            width: 19.adaptSize,
-                                          )
-                                        : SizedBox(),
-                                  ],
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    PrefUtils.sharedPreferences!
-                                                .getDouble('rate') !=
-                                            null
-                                        ? Text(
-                                            PrefUtils.sharedPreferences!
-                                                .getDouble('rate')!
-                                                .toString(),
-                                            style: const TextStyle(
-                                              color: Colors.grey,
-                                              fontSize: 15,
+                                    SizedBox(height: 20),
+                                    Padding(
+                                      padding:
+                                          const EdgeInsets.only(left: 20.0),
+                                      child: PrefUtils.sharedPreferences!
+                                                  .getBool('isConnectiong') ==
+                                              true
+                                          ? StreamBuilder<
+                                              CheckForCustomerRequestModel>(
+                                              stream: _requestStreamController
+                                                  .stream,
+                                              builder: (context, snapshot) {
+                                                if (snapshot.hasData &&
+                                                    snapshot.data != null &&
+                                                    snapshot.data!
+                                                            .connectionRequests !=
+                                                        null &&
+                                                    snapshot
+                                                            .data!
+                                                            .connectionRequests!
+                                                            .status ==
+                                                        "REQUESTED") {
+                                                  return Column(
+                                                    children: [
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .symmetric(
+                                                          horizontal: 40.0,
+                                                        ),
+                                                        child: Text(
+                                                          'Waiting for broker response...',
+                                                          style: TextStyle(
+                                                            color: appTheme
+                                                                .orangeA200,
+                                                            fontSize: 16,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      SizedBox(height: 20),
+                                                      _builCancelButton(
+                                                        context,
+                                                        snapshot,
+                                                      ),
+                                                    ],
+                                                  );
+                                                } else if (snapshot.hasData &&
+                                                    snapshot.data != null &&
+                                                    snapshot.data!
+                                                            .connectionRequests !=
+                                                        null &&
+                                                    snapshot
+                                                            .data!
+                                                            .connectionRequests!
+                                                            .status ==
+                                                        "ACCEPTED") {
+                                                  return SizedBox();
+                                                } else if (snapshot.hasData &&
+                                                    snapshot.data != null &&
+                                                    snapshot.data!
+                                                            .connectionRequests !=
+                                                        null &&
+                                                    snapshot
+                                                            .data!
+                                                            .connectionRequests!
+                                                            .status ==
+                                                        "CANCELLED") {
+                                                  return SizedBox();
+                                                } else if (snapshot.hasError) {
+                                                  debugPrint(
+                                                      'object snapshot error: ${snapshot.error}');
+                                                  return SizedBox();
+                                                } else if (snapshot
+                                                            .connectionState ==
+                                                        ConnectionState
+                                                            .waiting ||
+                                                    snapshot.connectionState ==
+                                                        ConnectionState.none) {
+                                                  return SizedBox();
+                                                } else {
+                                                  return SizedBox();
+                                                }
+                                              },
+                                            )
+                                          : InkWell(
+                                              onTap: () {
+                                                isCheckedtersm =
+                                                    !isCheckedtersm;
+                                                setState(() {});
+                                              },
+                                              child: Row(
+                                                children: <Widget>[
+                                                  Checkbox(
+                                                    value: isCheckedtersm,
+                                                    activeColor:
+                                                        appTheme.orangeA200,
+                                                    checkColor: Colors.white,
+                                                    onChanged: (value) {
+                                                      isCheckedtersm =
+                                                          !isCheckedtersm;
+                                                      setState(() {});
+                                                    },
+                                                  ),
+                                                  RichText(
+                                                    maxLines: 2,
+                                                    text: TextSpan(
+                                                      text: 'Accept',
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .bodyLarge,
+                                                      children: <TextSpan>[
+                                                        const TextSpan(
+                                                            text: ' '),
+                                                        TextSpan(
+                                                          text:
+                                                              'Term & condition',
+                                                          style: TextStyle(
+                                                              color: appTheme
+                                                                  .orangeA200,
+                                                              decoration:
+                                                                  TextDecoration
+                                                                      .underline),
+                                                          recognizer:
+                                                              TapGestureRecognizer()
+                                                                ..onTap = () =>
+                                                                    Navigator
+                                                                        .push(
+                                                                      context,
+                                                                      MaterialPageRoute(
+                                                                        builder:
+                                                                            (context) =>
+                                                                                const PrivacyTermScreen(),
+                                                                      ),
+                                                                    ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
-                                          )
-                                        : Text(0.0.toString()),
-                                    RatingBar.builder(
-                                      initialRating: PrefUtils
-                                                  .sharedPreferences!
-                                                  .getDouble('rate') ==
-                                              null
-                                          ? 0.0
-                                          : PrefUtils.sharedPreferences!
-                                              .getDouble('rate')!,
-                                      itemSize: 30,
-                                      minRating: 1,
-                                      direction: Axis.horizontal,
-                                      allowHalfRating: true,
-                                      itemCount: 5,
-                                      itemPadding: EdgeInsets.symmetric(
-                                        horizontal: 4.0,
-                                      ),
-                                      itemBuilder: (context, _) => Icon(
-                                        Icons.star,
-                                        color: Colors.amber,
-                                      ),
-                                      onRatingUpdate: (rating) {
-                                        print(rating);
-                                      },
-                                      ignoreGestures: true,
                                     ),
+                                    SizedBox(height: 20),
+                                    PrefUtils.sharedPreferences!
+                                                .getBool('isConnectiong') ==
+                                            true
+                                        ? SizedBox()
+                                        : _builConnectButton(context),
                                   ],
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10.0, vertical: 20),
-                                  child: Text(
-                                    'Waiting for broker response...',
-                                    style: TextStyle(
-                                      color: appTheme.orangeA200,
-                                      fontSize: 16,
+                              )
+                            : SelectPlaceAction(getLocationName(), () {}),
+                  ] else ...[
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: ResponsiveExtension(15).h,
+                        vertical: 25.v,
+                      ),
+                      decoration: AppDecoration.outlineWhite.copyWith(
+                        borderRadius: BorderRadiusStyle.customBorderTL25,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: <Widget>[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              CustomImageView(
+                                imagePath: ImageConstant.imageNotFound,
+                                border: Border.all(
+                                  color: appTheme.orangeA200,
+                                  width: 1,
+                                ),
+                                height: 60.adaptSize,
+                                width: 60.adaptSize,
+                                radius: BorderRadius.circular(
+                                  30.h,
+                                ),
+                              ),
+                              SizedBox(width: 20),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceAround,
+                                    children: [
+                                      Text(
+                                        PrefUtils.sharedPreferences!
+                                                .getString('fullname') ??
+                                            "",
+                                        style: const TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                      SizedBox(width: 20),
+                                      hasCar
+                                          ? CustomImageView(
+                                              imagePath: ImageConstant.car,
+                                              height: 14.adaptSize,
+                                              width: 19.adaptSize,
+                                            )
+                                          : SizedBox(),
+                                    ],
+                                  ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      PrefUtils.sharedPreferences!
+                                                  .getDouble('rate') !=
+                                              null
+                                          ? Text(
+                                              PrefUtils.sharedPreferences!
+                                                  .getDouble('rate')!
+                                                  .toString(),
+                                              style: const TextStyle(
+                                                color: Colors.grey,
+                                                fontSize: 15,
+                                              ),
+                                            )
+                                          : Text(0.0.toString()),
+                                      RatingBar.builder(
+                                        initialRating: PrefUtils
+                                                    .sharedPreferences!
+                                                    .getDouble('rate') ==
+                                                null
+                                            ? 0.0
+                                            : PrefUtils.sharedPreferences!
+                                                .getDouble('rate')!,
+                                        itemSize: 30,
+                                        minRating: 1,
+                                        direction: Axis.horizontal,
+                                        allowHalfRating: true,
+                                        itemCount: 5,
+                                        itemPadding: EdgeInsets.symmetric(
+                                          horizontal: 4.0,
+                                        ),
+                                        itemBuilder: (context, _) => Icon(
+                                          Icons.star,
+                                          color: Colors.amber,
+                                        ),
+                                        onRatingUpdate: (rating) {
+                                          debugPrint(rating.toString());
+                                        },
+                                        ignoreGestures: true,
+                                      ),
+                                    ],
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10.0, vertical: 20),
+                                    child: Text(
+                                      'Waiting for broker response...',
+                                      style: TextStyle(
+                                        color: appTheme.orangeA200,
+                                        fontSize: 16,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    showDialog(
-                                      context: context,
-                                      barrierDismissible:
-                                          false, // Prevent dialog from closing on outside tap
-                                      builder: (context) => GestureDetector(
-                                        behavior: HitTestBehavior.opaque,
-                                        onTap:
-                                            () {}, // Prevents taps from reaching underlying widgets
-                                        child: CustomDialog(
-                                          amount: '',
-                                          color: appTheme.orangeA200,
-                                          buttonLabel: 'Submit',
-                                          cancelReasons: cancelreason,
-                                          icon: Icons.done_all_rounded,
-                                          message: '',
-                                          onClick: (value) async {
-                                            Navigator.pop(
-                                                context); // Dismiss the dialog programmatically
-                                            ProgressDialogUtils
-                                                .showProgressDialog(
-                                              context: context,
-                                              isCancellable: false,
-                                            );
-                                            var respo = await ApiAuthHelper
-                                                .cancelBrokerRequest(
-                                              cennectionId: PrefUtils
-                                                  .sharedPreferences!
-                                                  .getInt('connectionId'),
-                                              reason: cancelreason[value],
-                                            );
-                                            setState(() {
-                                              isConnectiong = false;
-                                              PrefUtils.sharedPreferences!
-                                                  .setBool(
-                                                      'isConnectiong', false);
-
-                                              isBrokerSelected = false;
-                                              _timer.cancel();
-                                            });
-                                            if (respo) {
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      showDialog(
+                                        context: context,
+                                        barrierDismissible:
+                                            false, // Prevent dialog from closing on outside tap
+                                        builder: (context) => GestureDetector(
+                                          behavior: HitTestBehavior.opaque,
+                                          onTap:
+                                              () {}, // Prevents taps from reaching underlying widgets
+                                          child: CustomDialog(
+                                            amount: '',
+                                            color: appTheme.orangeA200,
+                                            buttonLabel: 'Submit',
+                                            cancelReasons: cancelreason,
+                                            icon: Icons.done_all_rounded,
+                                            message: '',
+                                            onClick: (value) async {
+                                              Navigator.pop(
+                                                  context); // Dismiss the dialog programmatically
                                               ProgressDialogUtils
-                                                  .hideProgressDialog();
+                                                  .showProgressDialog(
+                                                context: context,
+                                                isCancellable: false,
+                                              );
+                                              var respo = await ApiAuthHelper
+                                                  .cancelBrokerRequest(
+                                                cennectionId: PrefUtils
+                                                    .sharedPreferences!
+                                                    .getInt('connectionId'),
+                                                reason: cancelreason[value],
+                                              );
                                               setState(() {
                                                 isConnectiong = false;
                                                 PrefUtils.sharedPreferences!
@@ -920,77 +1491,93 @@ class PlacePickerState extends State<PlacePicker> {
                                                 isBrokerSelected = false;
                                                 _timer.cancel();
                                               });
-                                            } else {
-                                              ProgressDialogUtils
-                                                  .hideProgressDialog();
-                                              ProgressDialogUtils.showSnackBar(
-                                                context: context,
-                                                message: 'Something went wrong',
-                                              );
-                                            }
-                                          },
-                                          title: 'Cancel reason',
+                                              if (respo) {
+                                                ProgressDialogUtils
+                                                    .hideProgressDialog();
+                                                setState(() {
+                                                  isConnectiong = false;
+                                                  PrefUtils.sharedPreferences!
+                                                      .setBool('isConnectiong',
+                                                          false);
+
+                                                  isBrokerSelected = false;
+                                                  _timer.cancel();
+                                                });
+                                              } else {
+                                                ProgressDialogUtils
+                                                    .hideProgressDialog();
+                                                ProgressDialogUtils
+                                                    .showSnackBar(
+                                                  context: context,
+                                                  message:
+                                                      'Something went wrong',
+                                                );
+                                              }
+                                            },
+                                            title: 'Cancel reason',
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: Container(
+                                      width: 250,
+                                      height: 50,
+                                      alignment: Alignment.bottomCenter,
+                                      padding: const EdgeInsets.only(
+                                          top: 10, bottom: 10),
+                                      clipBehavior: Clip.antiAlias,
+                                      decoration: ShapeDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment(0.79, 0.61),
+                                          end: Alignment(-0.79, -0.61),
+                                          colors: [
+                                            Color(0xFFF06400),
+                                            Color(0xFFFFA05B)
+                                          ],
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          side: BorderSide(
+                                              width: 0.50, color: Colors.white),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
                                         ),
                                       ),
-                                    );
-                                  },
-                                  child: Container(
-                                    width: 250,
-                                    height: 50,
-                                    alignment: Alignment.bottomCenter,
-                                    padding: const EdgeInsets.only(
-                                        top: 10, bottom: 10),
-                                    clipBehavior: Clip.antiAlias,
-                                    decoration: ShapeDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment(0.79, 0.61),
-                                        end: Alignment(-0.79, -0.61),
-                                        colors: [
-                                          Color(0xFFF06400),
-                                          Color(0xFFFFA05B)
-                                        ],
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        side: BorderSide(
-                                            width: 0.50, color: Colors.white),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        'Cancel',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                          fontFamily: 'Poppins',
-                                          fontWeight: FontWeight.w700,
-                                          height: 0,
+                                      child: Center(
+                                        child: Text(
+                                          'Cancel',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontFamily: 'Poppins',
+                                            fontWeight: FontWeight.w700,
+                                            height: 0,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                )
-                              ],
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 20),
-                        SizedBox(height: 20),
-                        PrefUtils.sharedPreferences!
-                                    .containsKey('isConnectiong') &&
-                                PrefUtils.sharedPreferences!
-                                        .getBool('isConnectiong') ==
-                                    true
-                            ? SizedBox()
-                            : _builConnectButton(context),
-                      ],
-                    ),
-                  )
-                ]
-              ],
-            ),
-          ],
+                                  )
+                                ],
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 20),
+                          SizedBox(height: 20),
+                          PrefUtils.sharedPreferences!
+                                      .containsKey('isConnectiong') &&
+                                  PrefUtils.sharedPreferences!
+                                          .getBool('isConnectiong') ==
+                                      true
+                              ? SizedBox()
+                              : _builConnectButton(context),
+                        ],
+                      ),
+                    )
+                  ]
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1103,7 +1690,7 @@ class PlacePickerState extends State<PlacePicker> {
             PrefUtils.sharedPreferences!.setInt('connectionId', connectionId!);
             PrefUtils.sharedPreferences!.setBool('isConnectiong', true);
             setState(() {});
-            _timer = Timer.periodic(Duration(seconds: 3), (timer) {
+            _timer = Timer.periodic(Duration(seconds: 1), (timer) {
               _fetchUserRequests();
             });
             setState(() {});
@@ -1331,30 +1918,32 @@ class PlacePickerState extends State<PlacePicker> {
   /// proceeds to moving the map to that location.
   void decodeAndSelectPlaceForFirst(String? placeId) {
     clearOverlay();
-    var endpoint =
-        'https://maps.googleapis.com/maps/api/place/details/json?key=${widget.apiKey}'
-        '&placeid=$placeId';
-
-    http.get(endpoint.toUri()!).then((response) {
-      if (response.statusCode == 200) {
-        Map<String, dynamic> location =
-            jsonDecode(response.body)['result']['geometry']['location'];
-        var latLng = LatLng(location['lat'], location['lng']);
-        // here you need to request for new list of Broker information
-        final Map<String, dynamic> responseData = json.decode(response.body);
-        if (responseData['status'] == 'OK' && responseData['result'] != null) {
-          // Extract the full name of the place from the response
+    try {
+      var endpoint =
+          'https://maps.googleapis.com/maps/api/place/details/json?key=${widget.apiKey}'
+          '&placeid=$placeId';
+      http.get(endpoint.toUri()!).then((response) {
+        if (response.statusCode == 200) {
+          Map<String, dynamic> location =
+              jsonDecode(response.body)['result']['geometry']['location'];
+          var latLng = LatLng(location['lat'], location['lng']);
+          final Map<String, dynamic> responseData = json.decode(response.body);
+          if (responseData['status'] == 'OK' &&
+              responseData['result'] != null) {
+            setState(() {
+              placeName = responseData['result']['name'];
+            });
+          }
           setState(() {
-            placeName = responseData['result']['name'];
+            locationLatitude = location['lat'].toString();
+            locationLongtude = location['lng'].toString();
           });
+          moveToLocation(latLng);
         }
-        setState(() {
-          locationLatitude = location['lat'].toString();
-          locationLongtude = location['lng'].toString();
-        });
-        moveToLocation(latLng);
-      }
-    });
+      });
+    } catch (e) {
+      return;
+    }
   }
 
   /// Display autocomplete suggestions with the overlay.
@@ -1611,6 +2200,8 @@ class PrivacyTermScreenState extends State<PrivacyTermScreen> {
   @override
   Widget build(BuildContext context) {
     int number = 1;
+    debugPrint(
+        "PrefUtils.sharedPreferences!.getString('language_code')  ==> ${PrefUtils.sharedPreferences!.getString('language_code')}");
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -1623,9 +2214,9 @@ class PrivacyTermScreenState extends State<PrivacyTermScreen> {
           ),
         ),
         title: Text(
-          PrefUtils.sharedPreferences?.getString('language_code') == 'en'
+          PrefUtils.sharedPreferences!.getString('language_code') == 'en'
               ? 'Our term and condition'
-              : PrefUtils.sharedPreferences?.getString('language_code') == 'am'
+              : PrefUtils.sharedPreferences!.getString('language_code') == 'am'
                   ? 'የውል ሁኔታዎ እና ድንጋጌዎች'
                   : 'Haalawwanii fi Dambiiwwan keenya',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
@@ -1654,15 +2245,19 @@ class PrivacyTermScreenState extends State<PrivacyTermScreen> {
                       SizedBox(width: 5),
                       Expanded(
                         child: Text(
-                          PrefUtils.sharedPreferences
-                                      ?.getString('language_code') ==
-                                  'en'
+                          PrefUtils.sharedPreferences!
+                                      .getString('language_code') ==
+                                  null
                               ? entermsAndCondtion[i]
-                              : PrefUtils.sharedPreferences
-                                          ?.getString('language_code') ==
-                                      'am'
-                                  ? amtermsAndCondtion[i]
-                                  : orotermsAndCondtion[i],
+                              : PrefUtils.sharedPreferences!
+                                          .getString('language_code') ==
+                                      'en'
+                                  ? entermsAndCondtion[i]
+                                  : PrefUtils.sharedPreferences!
+                                              .getString('language_code') ==
+                                          'am'
+                                      ? amtermsAndCondtion[i]
+                                      : orotermsAndCondtion[i],
                           style: theme.textTheme.bodyLarge!.copyWith(
                             fontWeight: FontWeight.w500,
                             color: Colors.black54,
