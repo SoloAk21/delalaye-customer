@@ -56,7 +56,9 @@ class CategoryscreenoneScreenState extends State<CategoryscreenoneScreen> {
     super.initState();
     WidgetsBinding.instance.endOfFrame.then((value) async {
       serviceList = await ApiAuthHelper.getservice();
-      setState(() {});
+      if (mounted) {
+        setState(() {});
+      }
     });
   }
 

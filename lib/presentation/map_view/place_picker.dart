@@ -1049,13 +1049,13 @@ class PlacePickerState extends State<PlacePicker> {
                         ? GoogleMap(
                             initialCameraPosition: CameraPosition(
                               target: initialTarget,
-                              zoom: 50,
-                              bearing: 50,
+                              zoom: 15,
+                              // bearing: 15,
                             ),
                             myLocationButtonEnabled: true,
                             myLocationEnabled: true,
                             onMapCreated: onMapCreated,
-                            mapType: MapType.terrain, // Make the map dark
+                            mapType: MapType.normal, // Make the map dark
                             gestureRecognizers: Set()
                               ..add(Factory<OneSequenceGestureRecognizer>(() =>
                                   EagerGestureRecognizer())), // Disable all gestures
@@ -1067,7 +1067,7 @@ class PlacePickerState extends State<PlacePicker> {
                             initialCameraPosition: CameraPosition(
                               target: initialTarget,
                               zoom: 15,
-                              bearing: 50,
+                              // bearing: 50,
                             ),
                             myLocationButtonEnabled:
                                 false, // Optionally enable my location button
@@ -1994,16 +1994,14 @@ class PlacePickerState extends State<PlacePicker> {
 
   /// Moves the marker to the indicated lat,lng
   void setMarker(LatLng latLng) {
-    // markers.clear();
-    setState(() {
-      markers.clear();
-      markers.add(
-        Marker(
-          markerId: const MarkerId('selected-location'),
-          position: latLng,
-        ),
-      );
-    });
+    markers.clear();
+    markers.add(
+      Marker(
+        markerId: const MarkerId('selected-location'),
+        position: latLng,
+      ),
+    );
+    setState(() {});
   }
 
   /// Fetches and updates the nearby places to the provided lat,lng

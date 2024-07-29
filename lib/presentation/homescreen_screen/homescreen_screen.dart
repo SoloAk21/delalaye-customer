@@ -4,6 +4,8 @@ import 'package:delalochu/widgets/app_bar/custom_app_bar.dart';
 import 'package:delalochu/presentation/map_view/place_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../data/models/servicesModel/getServicesList.dart';
 import 'provider/homescreen_provider.dart';
 
 class HomescreenScreen extends StatefulWidget {
@@ -19,6 +21,7 @@ class HomescreenScreen extends StatefulWidget {
 
 class HomescreenScreenState extends State<HomescreenScreen> {
   late HomescreenProvider homescreenProvider;
+  List<Service>? serviceList;
   static final GlobalKey<ScaffoldState> scaffoldKey =
       GlobalKey<ScaffoldState>();
   Future<LocationData> getCurrentLocation() async {
@@ -52,6 +55,10 @@ class HomescreenScreenState extends State<HomescreenScreen> {
     homescreenProvider =
         Provider.of<HomescreenProvider>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // serviceList = await ApiAuthHelper.getservice();
+      // if (mounted) {
+      //   setState(() {});
+      // }
       getBrokerListBasedOnTheirServiceAndLocation();
     });
   }
@@ -70,6 +77,16 @@ class HomescreenScreenState extends State<HomescreenScreen> {
         ),
       ),
     );
+  }
+
+  void _rateApp() async {
+    const url =
+        'https://play.google.com/store/apps/details?id=com.delalayecustomer.app';
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url));
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 
   /// drawer widget
@@ -136,7 +153,7 @@ class HomescreenScreenState extends State<HomescreenScreen> {
                         );
                         break;
                       case 3:
-                        _closeDrawer();
+                        _rateApp();
                         break;
                       case 4:
                         showDialog(
@@ -254,16 +271,6 @@ class HomescreenScreenState extends State<HomescreenScreen> {
         imagePath: ImageConstant.imgImage190x258,
         fit: BoxFit.cover,
       ),
-      // title: Text(
-      //   "Delalaye",
-      //   style: TextStyle(
-      //     color: appTheme.orangeA200,
-      //     fontSize: 25.fSize,
-      //     fontFamily: 'Poppins',
-      //     fontWeight: FontWeight.w700,
-      //   ),
-      // ),
-      // centerTitle: true,
       actions: [
         CustomImageView(
           imagePath: ImageConstant.imgCharmMenuHamburger,
@@ -292,23 +299,25 @@ class HomescreenScreenState extends State<HomescreenScreen> {
     'lbl_house_rent'.tr,
     'lbl_car_sale'.tr,
     'lbl_car_rent'.tr,
-    // 'lbl_real_state'.tr,
     'lbl_house_maid'.tr,
-    // 'lbl_skilled_worker'.tr,
     'lbl_used_items'.tr,
-    // 'lbl_others'.tr,
   ];
   static var listOfImage = [
     ImageConstant.housesale,
     ImageConstant.rentHome,
     ImageConstant.car,
     ImageConstant.car,
-    // ImageConstant.building,
     ImageConstant.maid,
-    // ImageConstant.mechanic,
     ImageConstant.furniture,
-    // ImageConstant.more,
   ];
+  static Map<String, String> images = {
+    "House sell": ImageConstant.housesale,
+    "House rent": ImageConstant.rentHome,
+    "Car sell": ImageConstant.car,
+    "Car rent": ImageConstant.car,
+    "House maid": ImageConstant.maid,
+    "Ride": ImageConstant.furniture,
+  };
   static List<String> listserviceID = ['1', '2', '3', '4', '5', '6'];
   static var iconList = [
     Icons.home,
@@ -326,83 +335,231 @@ class HomescreenScreenState extends State<HomescreenScreen> {
     scaffoldKey.currentState?.closeDrawer();
   }
 
+  String _getImagePath(String serviceName) {
+    switch (serviceName) {
+      case 'House sell':
+        return ImageConstant.housesale;
+      case 'House rent':
+        return ImageConstant.rentHome;
+      case 'Car sell':
+      case 'Car rent':
+        return ImageConstant.car;
+      case 'House maid':
+        return ImageConstant.maid;
+      default:
+        return ImageConstant.furniture;
+    }
+  }
+
   /// Section Widget
   Widget _buildBody(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.only(
-        left: ResponsiveExtension(15).h,
-        right: ResponsiveExtension(15).h,
-        bottom: 5.v,
-      ),
-      padding: EdgeInsets.symmetric(
-        horizontal: ResponsiveExtension(16).h,
-        vertical: 18.v,
-      ),
-      child: GridView.builder(
-        shrinkWrap: true,
-        padding: EdgeInsets.all(5),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          mainAxisExtent: 200.v,
-          crossAxisCount: 3,
-          mainAxisSpacing: ResponsiveExtension(15).h,
-          crossAxisSpacing: ResponsiveExtension(15).h,
-        ),
-        physics: BouncingScrollPhysics(),
-        itemCount: listOfImage.length,
-        itemBuilder: (context, index) {
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: InkWell(
-                  onTap: () async {
-                    await Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => PlacePicker(
-                          ConstantStrings.googleApiKey,
-                          listserviceID[index],
-                        ),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    // margin: EdgeInsets.only(bottom: 10),
-                    // margin: EdgeInsets.symmetric(vertical: 20),
-                    width: 109.77,
-                    height: 109.77,
-                    decoration: AppDecoration.outlineBlack.copyWith(
-                      borderRadius: BorderRadiusStyle.roundedBorder15,
-                    ),
-                    child: Center(
-                      child: CustomImageView(
-                        margin: EdgeInsets.only(top: 1),
-                        imagePath: listOfImage[index],
-                        color: Color(0xFFFFA05B),
-                        // height: 64.v,
-                        width: ResponsiveExtension(65).h,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 10.0),
-                  child: Text(
-                    listofImageName[index],
-                    style: TextStyle(
+    return Consumer<HomescreenProvider>(
+      builder: (context, homescreenProvider, child) {
+        final initialList =
+            homescreenProvider.serviceList?.take(5).toList() ?? [];
+        final remainingList = homescreenProvider.serviceList?.skip(5).toList();
+        return Container(
+          margin: EdgeInsets.only(
+            left: ResponsiveExtension(15).h,
+            right: ResponsiveExtension(15).h,
+            bottom: 5.v,
+          ),
+          padding: EdgeInsets.symmetric(
+            horizontal: ResponsiveExtension(16).h,
+            vertical: 18.v,
+          ),
+          child: homescreenProvider.serviceList == null ||
+                  homescreenProvider.isLoadingServiceList
+              ? Center(
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: CircularProgressIndicator(
                       color: Colors.black,
-                      fontSize: 14,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w600,
                     ),
+                  ),
+                )
+              : Column(
+                  children: [
+                    SingleChildScrollView(
+                      child: GridView.builder(
+                        shrinkWrap: true,
+                        padding: EdgeInsets.all(5),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          mainAxisExtent: 200.v,
+                          crossAxisCount: 3,
+                          mainAxisSpacing: ResponsiveExtension(15).h,
+                          crossAxisSpacing: ResponsiveExtension(15).h,
+                        ),
+                        physics: BouncingScrollPhysics(),
+                        itemCount: initialList.length + 1,
+                        itemBuilder: (context, index) {
+                          if (index < initialList.length) {
+                            return _buildGridItem(context, initialList[index]);
+                          } else {
+                            return _buildMoreButton(context, remainingList);
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+        );
+      },
+    );
+  }
+
+  Widget _buildGridItem(BuildContext context, Service service) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: InkWell(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => PlacePicker(
+                    ConstantStrings.googleApiKey,
+                    service.id.toString(),
+                  ),
+                ),
+              );
+            },
+            child: Container(
+              width: 109.77,
+              height: 109.77,
+              decoration: AppDecoration.outlineBlack.copyWith(
+                borderRadius: BorderRadiusStyle.roundedBorder15,
+              ),
+              child: Center(
+                child: CustomImageView(
+                  margin: EdgeInsets.only(top: 1),
+                  imagePath: _getImagePath(service.name ?? ""),
+                  color: Color(0xFFFFA05B),
+                  width: ResponsiveExtension(65).h,
+                ),
+              ),
+            ),
+          ),
+        ),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 10.0),
+            child: Text(
+              service.name ?? "",
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 14,
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMoreButton(BuildContext context, List<Service>? remainingList) {
+    return InkWell(
+      onTap: () {
+        if (remainingList != null && remainingList.isNotEmpty) {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text('More Services'),
+                content: Container(
+                  width: double.maxFinite,
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: remainingList.length,
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        title: Container(
+                          height: 45,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Center(
+                            child: Text(
+                              remainingList[index].name ?? "",
+                              textAlign: TextAlign.left,
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 14,
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => PlacePicker(
+                                ConstantStrings.googleApiKey,
+                                remainingList[index].id.toString(),
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    child: Text('Close'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        }
+      },
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: InkWell(
+              child: Container(
+                width: 109.77,
+                height: 109.77,
+                decoration: AppDecoration.outlineBlack.copyWith(
+                  borderRadius: BorderRadiusStyle.roundedBorder15,
+                ),
+                child: Center(
+                  child: CustomImageView(
+                    margin: EdgeInsets.only(top: 1),
+                    imagePath: ImageConstant.furniture,
+                    color: Color(0xFFFFA05B),
+                    width: ResponsiveExtension(65).h,
                   ),
                 ),
               ),
-            ],
-          );
-        },
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 10.0),
+              child: Text(
+                "More",
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 14,
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

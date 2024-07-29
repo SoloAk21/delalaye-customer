@@ -3,6 +3,7 @@ import 'package:delalochu/presentation/homescreen_screen/models/houseSaleservice
 import 'package:flutter/material.dart';
 import 'package:delalochu/presentation/homescreen_screen/models/homescreen_model.dart';
 
+import '../../../data/models/servicesModel/getServicesList.dart';
 import '../../../domain/apiauthhelpers/apiauth.dart';
 import '../models/CarRantSviceBroker.dart';
 import '../models/CarSaleerviceBroker.dart';
@@ -23,6 +24,10 @@ class HomescreenProvider extends ChangeNotifier {
   List<CarSaleBrokerInfo> carSaleBrokerinfo = [];
   List<CarRentBrokerInfo> carRentBrokerinfo = [];
   List<UsedItemBrokerInfo> usedItemBrokerInfo = [];
+  List<Service>? _serviceList = [];
+
+  bool isLoadingServiceList = false;
+  List<Service>? get serviceList => _serviceList;
 
   bool isSelectedSwitch = true;
   bool ishouseSaleBrokerInfoLoading = false;
@@ -31,6 +36,11 @@ class HomescreenProvider extends ChangeNotifier {
   bool iscarSaleBrokerinfoLoading = false;
   bool iscarRentBrokerinfoLoading = false;
   bool isusedItemBrokerInfoLoading = false;
+
+  HomescreenProvider() {
+    isLoadingService(true);
+    fetchService();
+  }
 
   @override
   void dispose() {
@@ -54,6 +64,17 @@ class HomescreenProvider extends ChangeNotifier {
 
   isLoadinghouseMaidBrokerInfo(bool value) {
     ishouseMaidBrokerInfoLoading = value;
+    notifyListeners();
+  }
+
+  isLoadingService(bool value) {
+    isLoadingServiceList = value;
+    notifyListeners();
+  }
+
+  fetchService() async {
+    _serviceList = await ApiAuthHelper.getservice();
+    isLoadingServiceList = false;
     notifyListeners();
   }
 
