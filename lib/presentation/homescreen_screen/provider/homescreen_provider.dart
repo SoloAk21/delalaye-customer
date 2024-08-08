@@ -18,7 +18,7 @@ import '../models/houseRantserviceBroker.dart';
 // ignore_for_file: must_be_immutable
 class HomescreenProvider extends ChangeNotifier {
   HomescreenModel homescreenModelObj = HomescreenModel();
-  List<HouseSaleBrokerInfo> houseSaleBrokerInfo = [];
+  List<HouseSaleBrokerInfo> listOfBrokersWithServece = [];
   List<HouseRantBrokerInfo> houseRantBrokerInfo = [];
   List<HouseMaidBrokerInfo> houseMaidBrokerInfo = [];
   List<CarSaleBrokerInfo> carSaleBrokerinfo = [];
@@ -30,7 +30,7 @@ class HomescreenProvider extends ChangeNotifier {
   List<Service>? get serviceList => _serviceList;
 
   bool isSelectedSwitch = true;
-  bool ishouseSaleBrokerInfoLoading = false;
+  bool isLoadingForData = false;
   bool ishouseRantBrokerInfoLoading = false;
   bool ishouseMaidBrokerInfoLoading = false;
   bool iscarSaleBrokerinfoLoading = false;
@@ -52,8 +52,8 @@ class HomescreenProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  isLoadinghouseSaleBrokerInfo(bool value) {
-    ishouseSaleBrokerInfoLoading = value;
+  isLoadingData(bool value) {
+    isLoadingForData = value;
     notifyListeners();
   }
 
@@ -94,54 +94,12 @@ class HomescreenProvider extends ChangeNotifier {
   }
 
   fetchBrokerList({latitude, longitude, serviceId}) async {
-    if (serviceId == 1) {
-      houseSaleBrokerInfo = await ApiAuthHelper.fetchHouseSaleBrokerData(
-        latitude: latitude,
-        longitude: longitude,
-        serviceId: serviceId,
-      );
-      ishouseSaleBrokerInfoLoading = false;
-      notifyListeners();
-    } else if (serviceId == 2) {
-      houseRantBrokerInfo = await ApiAuthHelper.fetchHouseRantBrokerData(
-        latitude: latitude,
-        longitude: longitude,
-        serviceId: serviceId,
-      );
-      ishouseRantBrokerInfoLoading = false;
-      notifyListeners();
-    } else if (serviceId == 3) {
-      carSaleBrokerinfo = await ApiAuthHelper.fetchCarSaleBrokerData(
-        latitude: latitude,
-        longitude: longitude,
-        serviceId: serviceId,
-      );
-      iscarSaleBrokerinfoLoading = false;
-      notifyListeners();
-    } else if (serviceId == 4) {
-      carRentBrokerinfo = await ApiAuthHelper.fetchCarRantBrokerData(
-        latitude: latitude,
-        longitude: longitude,
-        serviceId: serviceId,
-      );
-      iscarRentBrokerinfoLoading = false;
-      notifyListeners();
-    } else if (serviceId == 5) {
-      houseMaidBrokerInfo = await ApiAuthHelper.fetchHouseMaidBrokerData(
-        latitude: latitude,
-        longitude: longitude,
-        serviceId: serviceId,
-      );
-      ishouseMaidBrokerInfoLoading = false;
-      notifyListeners();
-    } else if (serviceId == 6) {
-      usedItemBrokerInfo = await ApiAuthHelper.fetchUsedItemBrokerData(
-        latitude: latitude,
-        longitude: longitude,
-        serviceId: serviceId,
-      );
-      isusedItemBrokerInfoLoading = false;
-      notifyListeners();
-    }
+    listOfBrokersWithServece = await ApiAuthHelper.fetchHouseSaleBrokerData(
+      latitude: latitude,
+      longitude: longitude,
+      serviceId: serviceId,
+    );
+    isLoadingForData = false;
+    notifyListeners();
   }
 }

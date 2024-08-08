@@ -30,7 +30,7 @@ class HomescreenScreenState extends State<HomescreenScreen> {
   }
 
   getBrokerListBasedOnTheirServiceAndLocation() async {
-    await homescreenProvider.isLoadinghouseSaleBrokerInfo(true);
+    await homescreenProvider.isLoadingData(true);
     await homescreenProvider.isLoadinghouseRantBrokerInfo(true);
     await homescreenProvider.isLoadingcarSaleBrokerinfo(true);
     await homescreenProvider.isLoadingcarRentBrokerinfo(true);
@@ -59,7 +59,7 @@ class HomescreenScreenState extends State<HomescreenScreen> {
       // if (mounted) {
       //   setState(() {});
       // }
-      getBrokerListBasedOnTheirServiceAndLocation();
+      // getBrokerListBasedOnTheirServiceAndLocation();
     });
   }
 

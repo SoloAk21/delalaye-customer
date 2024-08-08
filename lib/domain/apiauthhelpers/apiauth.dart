@@ -277,6 +277,8 @@ class ApiAuthHelper {
         var res = await response.stream.bytesToString();
         var jsonResponse = json.decode(res);
         if (jsonResponse['user'] != null) {
+          PrefUtils.sharedPreferences!
+              .setInt('userId', jsonResponse['user']['id']);
           return true;
         }
       }
@@ -309,6 +311,9 @@ class ApiAuthHelper {
   static Future<bool> changePassword({newpassword}) async {
     try {
       var userId = PrefUtils.sharedPreferences!.getInt('userId') ?? '';
+      print('================================================================');
+      print('====UserId: ' + userId.toString());
+      print('================================================================');
       if (userId != '') {
         var headers = {'Content-Type': 'application/json'};
         var request = http.Request(
