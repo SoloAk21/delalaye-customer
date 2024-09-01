@@ -374,16 +374,34 @@ class PlacePickerState extends State<PlacePicker> {
                     '${listofbrokers[i].fullName ?? ""} ${listofbrokers[i].phone ?? ""}',
                 onTap: () async {
                   if (listofbrokers[i].phone != null) {
-                    final url =
-                        Uri(scheme: 'tel', path: listofbrokers[i].phone);
-                    if (await canLaunchUrl(url)) {
-                      launchUrl(url).then((value) {
-                        PrefUtils.sharedPreferences!.setString('description',
-                            'lbl_please_tap_on_the_nearest_delala'.tr);
-                        NavigatorService.pushNamedAndRemoveUntil(
-                          AppRoutes.homescreenScreens,
-                        );
-                      });
+                    ProgressDialogUtils.showProgressDialog(
+                      context: context,
+                      isCancellable: false,
+                    );
+                    var respo = await ApiAuthHelper.directCalltobroker(
+                      brokerId: listofbrokers[i].id,
+                      serviceId: widget.selectedserviceId ?? '1',
+                      locationName: placeName ?? "",
+                      locationLatitude:
+                          listofbrokers[i].locationLatitude ?? 0.0,
+                      locationLongtude:
+                          listofbrokers[i].locationLongtude ?? 0.0,
+                    );
+                    if (respo) {
+                      ProgressDialogUtils.hideProgressDialog();
+                      final url =
+                          Uri(scheme: 'tel', path: listofbrokers[i].phone);
+                      if (await canLaunchUrl(url)) {
+                        launchUrl(url).then((value) {
+                          PrefUtils.sharedPreferences!.setString('description',
+                              'lbl_please_tap_on_the_nearest_delala'.tr);
+                          NavigatorService.pushNamedAndRemoveUntil(
+                            AppRoutes.homescreenScreens,
+                          );
+                        });
+                      }
+                    } else {
+                      ProgressDialogUtils.hideProgressDialog();
                     }
                   }
                 },
@@ -480,9 +498,6 @@ class PlacePickerState extends State<PlacePicker> {
       setMarkerForCustomer();
     });
     await homescreenProvider.isLoadingData(true);
-    print('================================================================');
-    print('$locationLatitude $locationLongtude');
-    print('================================================================');
     homescreenProvider.fetchBrokerList(
       latitude: locationLatitude,
       longitude: locationLongtude,
@@ -572,511 +587,6 @@ class PlacePickerState extends State<PlacePicker> {
         setState(() {});
       }
     }
-    // switch (widget.selectedserviceId ?? '1') {
-    //   case '1':
-    //     if (homescreenProvider.isLoadingForData) {
-    //       ProgressDialogUtils.showProgressDialog(
-    //         context: context,
-    //         isCancellable: false,
-    //       );
-    //       Future.delayed(Duration(seconds: 1)).then((value) {
-    //         setInitialMarkersBasedOnBorkersLocations();
-    //       });
-    //     } else {
-    //       ProgressDialogUtils.hideProgressDialog();
-    //       if (homescreenProvider.houseSaleBrokerInfo.isNotEmpty ||
-    //           homescreenProvider.houseSaleBrokerInfo.length > 0) {
-    //         for (var i = 0;
-    //             i < homescreenProvider.houseSaleBrokerInfo.length;
-    //             i++) {
-    //           marker.add(
-    //             Marker(
-    //               position: LatLng(
-    //                 homescreenProvider
-    //                         .houseSaleBrokerInfo[i].locationLatitude ??
-    //                     0.0,
-    //                 homescreenProvider
-    //                         .houseSaleBrokerInfo[i].locationLongtude ??
-    //                     0.0,
-    //               ),
-    //               icon: brokerIcon ??
-    //                   await BitmapDescriptor.fromAssetImage(
-    //                     ImageConfiguration(size: ui.Size.fromWidth(300)),
-    //                     'assets/images/markerImage.png',
-    //                   ),
-    //               markerId: MarkerId(
-    //                   '${homescreenProvider.houseSaleBrokerInfo[i].id}'),
-    //               onTap: () {
-    //                 if (PrefUtils.sharedPreferences!.getBool('isConnectiong') ==
-    //                     true) {
-    //                   ProgressDialogUtils.showSnackBar(
-    //                       context: context,
-    //                       message:
-    //                           "You have requested already. Please wait for the response or cancel the request");
-    //                 } else {
-    //                   setState(() {
-    //                     fullname = homescreenProvider
-    //                             .houseSaleBrokerInfo[i].fullName ??
-    //                         "";
-    //                     rate =
-    //                         homescreenProvider.houseSaleBrokerInfo[i].rate ?? 0;
-    //                     hasCar =
-    //                         homescreenProvider.houseSaleBrokerInfo[i].hasCar ??
-    //                             false;
-    //                     selectedbrokerId = homescreenProvider
-    //                         .houseSaleBrokerInfo[i].id
-    //                         .toString();
-    //                     phoneNumber =
-    //                         homescreenProvider.houseSaleBrokerInfo[i].phone ??
-    //                             "";
-    //                     isBrokerSelected = true;
-    //                   });
-    //                 }
-    //               },
-    //               infoWindow: InfoWindow(
-    //                 title:
-    //                     '${homescreenProvider.houseSaleBrokerInfo[i].fullName}',
-    //               ),
-    //             ),
-    //           );
-    //         }
-    //         ProgressDialogUtils.hideProgressDialog();
-    //         PrefUtils.sharedPreferences!.setBool('isSearching', true);
-    //         PrefUtils.sharedPreferences!.remove('description');
-    //         PrefUtils.sharedPreferences!.setString('description',
-    //             'There are ${homescreenProvider.houseSaleBrokerInfo.length} Brokers available around $placeName');
-    //         if (!mounted) return;
-    //         setState(() {});
-    //       } else {
-    //         ProgressDialogUtils.hideProgressDialog();
-    //         PrefUtils.sharedPreferences!.setBool('isSearching', true);
-    //         PrefUtils.sharedPreferences!.remove('description');
-    //         PrefUtils.sharedPreferences!.setString('description',
-    //             'There are no brokers available around $placeName. Please search another place!');
-    //         if (!mounted) return;
-    //         setState(() {});
-    //       }
-    //     }
-    //     break;
-    //   case '2':
-    //     if (homescreenProvider.ishouseRantBrokerInfoLoading) {
-    //       ProgressDialogUtils.showProgressDialog(
-    //         context: context,
-    //         isCancellable: false,
-    //       );
-    //       Future.delayed(Duration(seconds: 1)).then((value) {
-    //         setInitialMarkersBasedOnBorkersLocations();
-    //       });
-    //     } else {
-    //       ProgressDialogUtils.hideProgressDialog();
-    //       if (homescreenProvider.houseRantBrokerInfo.isNotEmpty ||
-    //           homescreenProvider.houseRantBrokerInfo.length > 0) {
-    //         for (var i = 0;
-    //             i < homescreenProvider.houseRantBrokerInfo.length;
-    //             i++) {
-    //           marker.add(
-    //             Marker(
-    //               position: LatLng(
-    //                 homescreenProvider
-    //                         .houseRantBrokerInfo[i].locationLatitude ??
-    //                     0.0,
-    //                 homescreenProvider
-    //                         .houseRantBrokerInfo[i].locationLongtude ??
-    //                     0.0,
-    //               ),
-    //               icon: brokerIcon ??
-    //                   await BitmapDescriptor.fromAssetImage(
-    //                     ImageConfiguration(size: ui.Size.fromWidth(300)),
-    //                     'assets/images/markerImage.png',
-    //                   ),
-    //               markerId: MarkerId(
-    //                   '${homescreenProvider.houseRantBrokerInfo[i].id}'),
-    //               onTap: () {
-    //                 if (PrefUtils.sharedPreferences!.getBool('isConnectiong') ==
-    //                     true) {
-    //                   ProgressDialogUtils.showSnackBar(
-    //                       context: context,
-    //                       message:
-    //                           "You have requested already. Please wait for the response or cancel the request");
-    //                 } else {
-    //                   setState(() {
-    //                     fullname = homescreenProvider
-    //                             .houseRantBrokerInfo[i].fullName ??
-    //                         "";
-    //                     rate =
-    //                         homescreenProvider.houseRantBrokerInfo[i].rate ?? 0;
-    //                     hasCar =
-    //                         homescreenProvider.houseRantBrokerInfo[i].hasCar ??
-    //                             false;
-    //                     selectedbrokerId = homescreenProvider
-    //                         .houseRantBrokerInfo[i].id
-    //                         .toString();
-    //                     phoneNumber =
-    //                         homescreenProvider.houseRantBrokerInfo[i].phone ??
-    //                             "";
-    //                     isBrokerSelected = true;
-    //                   });
-    //                 }
-    //               },
-    //               infoWindow: InfoWindow(
-    //                 title:
-    //                     '${homescreenProvider.houseRantBrokerInfo[i].fullName}',
-    //               ),
-    //             ),
-    //           );
-    //         }
-    //         ProgressDialogUtils.hideProgressDialog();
-    //         PrefUtils.sharedPreferences!.setBool('isSearching', true);
-    //         PrefUtils.sharedPreferences!.remove('description');
-    //         PrefUtils.sharedPreferences!.setString('description',
-    //             'There are ${homescreenProvider.houseRantBrokerInfo.length} Brokers available around $placeName');
-    //         if (!mounted) return;
-    //         setState(() {});
-    //       } else {
-    //         ProgressDialogUtils.hideProgressDialog();
-    //         PrefUtils.sharedPreferences!.setBool('isSearching', true);
-    //         PrefUtils.sharedPreferences!.remove('description');
-    //         PrefUtils.sharedPreferences!.setString('description',
-    //             'There are no brokers available around $placeName. Please search another place!');
-    //         if (!mounted) return;
-    //         setState(() {});
-    //       }
-    //     }
-    //     break;
-    //   case '3':
-    //     if (homescreenProvider.iscarSaleBrokerinfoLoading) {
-    //       ProgressDialogUtils.showProgressDialog(
-    //         context: context,
-    //         isCancellable: false,
-    //       );
-    //       Future.delayed(Duration(seconds: 1)).then((value) {
-    //         setInitialMarkersBasedOnBorkersLocations();
-    //       });
-    //     } else {
-    //       ProgressDialogUtils.hideProgressDialog();
-    //       if (homescreenProvider.carSaleBrokerinfo.isNotEmpty ||
-    //           homescreenProvider.carSaleBrokerinfo.length > 0) {
-    //         for (var i = 0;
-    //             i < homescreenProvider.carSaleBrokerinfo.length;
-    //             i++) {
-    //           marker.add(
-    //             Marker(
-    //               position: LatLng(
-    //                 homescreenProvider.carSaleBrokerinfo[i].locationLatitude ??
-    //                     0.0,
-    //                 homescreenProvider.carSaleBrokerinfo[i].locationLongtude ??
-    //                     0.0,
-    //               ),
-    //               icon: brokerIcon ??
-    //                   await BitmapDescriptor.fromAssetImage(
-    //                     ImageConfiguration(size: ui.Size.fromWidth(300)),
-    //                     'assets/images/markerImage.png',
-    //                   ),
-    //               markerId:
-    //                   MarkerId('${homescreenProvider.carSaleBrokerinfo[i].id}'),
-    //               onTap: () {
-    //                 if (PrefUtils.sharedPreferences!.getBool('isConnectiong') ==
-    //                     true) {
-    //                   ProgressDialogUtils.showSnackBar(
-    //                       context: context,
-    //                       message:
-    //                           "You have requested already. Please wait for the response or cancel the request");
-    //                 } else {
-    //                   setState(() {
-    //                     fullname =
-    //                         homescreenProvider.carSaleBrokerinfo[i].fullName ??
-    //                             "";
-    //                     rate =
-    //                         homescreenProvider.carSaleBrokerinfo[i].rate ?? 0;
-    //                     hasCar =
-    //                         homescreenProvider.carSaleBrokerinfo[i].hasCar ??
-    //                             false;
-    //                     selectedbrokerId = homescreenProvider
-    //                         .carSaleBrokerinfo[i].id
-    //                         .toString();
-    //                     phoneNumber =
-    //                         homescreenProvider.carSaleBrokerinfo[i].phone ?? "";
-    //                     isBrokerSelected = true;
-    //                   });
-    //                 }
-    //               },
-    //               infoWindow: InfoWindow(
-    //                 title:
-    //                     '${homescreenProvider.carSaleBrokerinfo[i].fullName}',
-    //               ),
-    //             ),
-    //           );
-    //         }
-    //         ProgressDialogUtils.hideProgressDialog();
-    //         PrefUtils.sharedPreferences!.setBool('isSearching', true);
-    //         PrefUtils.sharedPreferences!.remove('description');
-    //         PrefUtils.sharedPreferences!.setString('description',
-    //             'There are ${homescreenProvider.carSaleBrokerinfo.length} Brokers available around $placeName');
-    //         if (!mounted) return;
-    //         setState(() {});
-    //       } else {
-    //         ProgressDialogUtils.hideProgressDialog();
-    //         PrefUtils.sharedPreferences!.setBool('isSearching', true);
-    //         PrefUtils.sharedPreferences!.remove('description');
-    //         PrefUtils.sharedPreferences!.setString('description',
-    //             'There are no brokers available around $placeName. Please search another place!');
-    //         if (!mounted) return;
-    //         setState(() {});
-    //       }
-    //     }
-    //     break;
-    //   case '4':
-    //     if (homescreenProvider.iscarRentBrokerinfoLoading) {
-    //       ProgressDialogUtils.showProgressDialog(
-    //         context: context,
-    //         isCancellable: false,
-    //       );
-    //       Future.delayed(Duration(seconds: 1)).then((value) {
-    //         setInitialMarkersBasedOnBorkersLocations();
-    //       });
-    //     } else {
-    //       ProgressDialogUtils.hideProgressDialog();
-    //       if (homescreenProvider.carRentBrokerinfo.isNotEmpty ||
-    //           homescreenProvider.carRentBrokerinfo.length > 0) {
-    //         for (var i = 0;
-    //             i < homescreenProvider.carRentBrokerinfo.length;
-    //             i++) {
-    //           marker.add(
-    //             Marker(
-    //               position: LatLng(
-    //                 homescreenProvider.carRentBrokerinfo[i].locationLatitude ??
-    //                     0.0,
-    //                 homescreenProvider.carRentBrokerinfo[i].locationLongtude ??
-    //                     0.0,
-    //               ),
-    //               icon: brokerIcon ??
-    //                   await BitmapDescriptor.fromAssetImage(
-    //                     ImageConfiguration(size: ui.Size.fromWidth(300)),
-    //                     'assets/images/markerImage.png',
-    //                   ),
-    //               markerId:
-    //                   MarkerId('${homescreenProvider.carRentBrokerinfo[i].id}'),
-    //               onTap: () {
-    //                 if (PrefUtils.sharedPreferences!.getBool('isConnectiong') ==
-    //                     true) {
-    //                   ProgressDialogUtils.showSnackBar(
-    //                       context: context,
-    //                       message:
-    //                           "You have requested already. Please wait for the response or cancel the request");
-    //                 } else {
-    //                   setState(() {
-    //                     fullname =
-    //                         homescreenProvider.carRentBrokerinfo[i].fullName ??
-    //                             "";
-    //                     rate =
-    //                         homescreenProvider.carRentBrokerinfo[i].rate ?? 0;
-    //                     hasCar =
-    //                         homescreenProvider.carRentBrokerinfo[i].hasCar ??
-    //                             false;
-    //                     selectedbrokerId = homescreenProvider
-    //                         .carRentBrokerinfo[i].id
-    //                         .toString();
-    //                     phoneNumber =
-    //                         homescreenProvider.carRentBrokerinfo[i].phone ?? "";
-    //                     isBrokerSelected = true;
-    //                   });
-    //                 }
-    //               },
-    //               infoWindow: InfoWindow(
-    //                 title:
-    //                     '${homescreenProvider.carRentBrokerinfo[i].fullName}',
-    //               ),
-    //             ),
-    //           );
-    //         }
-    //         ProgressDialogUtils.hideProgressDialog();
-    //         PrefUtils.sharedPreferences!.setBool('isSearching', true);
-    //         PrefUtils.sharedPreferences!.remove('description');
-    //         PrefUtils.sharedPreferences!.setString('description',
-    //             'There are ${homescreenProvider.carRentBrokerinfo.length} Brokers available around $placeName');
-    //         if (!mounted) return;
-    //         setState(() {});
-    //       } else {
-    //         ProgressDialogUtils.hideProgressDialog();
-    //         PrefUtils.sharedPreferences!.setBool('isSearching', true);
-    //         PrefUtils.sharedPreferences!.remove('description');
-    //         PrefUtils.sharedPreferences!.setString('description',
-    //             'There are no brokers available around $placeName. Please search another place!');
-    //         if (!mounted) return;
-    //         setState(() {});
-    //       }
-    //     }
-    //     break;
-    //   case '5':
-    //     if (homescreenProvider.ishouseMaidBrokerInfoLoading) {
-    //       ProgressDialogUtils.showProgressDialog(
-    //         context: context,
-    //         isCancellable: false,
-    //       );
-    //       Future.delayed(Duration(seconds: 1)).then((value) {
-    //         setInitialMarkersBasedOnBorkersLocations();
-    //       });
-    //     } else {
-    //       ProgressDialogUtils.hideProgressDialog();
-    //       if (homescreenProvider.houseMaidBrokerInfo.isNotEmpty ||
-    //           homescreenProvider.houseMaidBrokerInfo.length > 0) {
-    //         for (var i = 0;
-    //             i < homescreenProvider.houseMaidBrokerInfo.length;
-    //             i++) {
-    //           marker.add(
-    //             Marker(
-    //               position: LatLng(
-    //                 homescreenProvider
-    //                         .houseMaidBrokerInfo[i].locationLatitude ??
-    //                     0.0,
-    //                 homescreenProvider
-    //                         .houseMaidBrokerInfo[i].locationLongtude ??
-    //                     0.0,
-    //               ),
-    //               icon: brokerIcon ??
-    //                   await BitmapDescriptor.fromAssetImage(
-    //                     ImageConfiguration(size: ui.Size.fromWidth(300)),
-    //                     'assets/images/markerImage.png',
-    //                   ),
-    //               markerId: MarkerId(
-    //                   '${homescreenProvider.houseMaidBrokerInfo[i].id}'),
-    //               onTap: () {
-    //                 if (PrefUtils.sharedPreferences!.getBool('isConnectiong') ==
-    //                     true) {
-    //                   ProgressDialogUtils.showSnackBar(
-    //                       context: context,
-    //                       message:
-    //                           "You have requested already. Please wait for the response or cancel the request");
-    //                 } else {
-    //                   setState(() {
-    //                     fullname = homescreenProvider
-    //                             .houseMaidBrokerInfo[i].fullName ??
-    //                         "";
-    //                     rate =
-    //                         homescreenProvider.houseMaidBrokerInfo[i].rate ?? 0;
-    //                     hasCar =
-    //                         homescreenProvider.houseMaidBrokerInfo[i].hasCar ??
-    //                             false;
-    //                     selectedbrokerId = homescreenProvider
-    //                         .houseMaidBrokerInfo[i].id
-    //                         .toString();
-    //                     phoneNumber =
-    //                         homescreenProvider.houseMaidBrokerInfo[i].phone ??
-    //                             "";
-    //                     isBrokerSelected = true;
-    //                   });
-    //                 }
-    //               },
-    //               infoWindow: InfoWindow(
-    //                 title:
-    //                     '${homescreenProvider.houseMaidBrokerInfo[i].fullName}',
-    //               ),
-    //             ),
-    //           );
-    //         }
-    //         ProgressDialogUtils.hideProgressDialog();
-    //         PrefUtils.sharedPreferences!.setBool('isSearching', true);
-    //         PrefUtils.sharedPreferences!.remove('description');
-    //         PrefUtils.sharedPreferences!.setString('description',
-    //             'There are ${homescreenProvider.houseMaidBrokerInfo.length} Brokers available around $placeName');
-    //         if (!mounted) return;
-    //         setState(() {});
-    //       } else {
-    //         ProgressDialogUtils.hideProgressDialog();
-    //         PrefUtils.sharedPreferences!.setBool('isSearching', true);
-    //         PrefUtils.sharedPreferences!.remove('description');
-    //         PrefUtils.sharedPreferences!.setString('description',
-    //             'There are no brokers available around $placeName. Please search another place!');
-    //         if (!mounted) return;
-    //         setState(() {});
-    //       }
-    //     }
-    //     break;
-    //   case '6':
-    //     if (homescreenProvider.isusedItemBrokerInfoLoading) {
-    //       ProgressDialogUtils.showProgressDialog(
-    //         context: context,
-    //         isCancellable: false,
-    //       );
-    //       Future.delayed(Duration(seconds: 1)).then((value) {
-    //         setInitialMarkersBasedOnBorkersLocations();
-    //       });
-    //     } else {
-    //       ProgressDialogUtils.hideProgressDialog();
-    //       if (homescreenProvider.usedItemBrokerInfo.isNotEmpty ||
-    //           homescreenProvider.usedItemBrokerInfo.length > 0) {
-    //         for (var i = 0;
-    //             i < homescreenProvider.usedItemBrokerInfo.length;
-    //             i++) {
-    //           marker.add(
-    //             Marker(
-    //               position: LatLng(
-    //                 homescreenProvider.usedItemBrokerInfo[i].locationLatitude ??
-    //                     0.0,
-    //                 homescreenProvider.usedItemBrokerInfo[i].locationLongtude ??
-    //                     0.0,
-    //               ),
-    //               icon: brokerIcon ??
-    //                   await BitmapDescriptor.fromAssetImage(
-    //                     ImageConfiguration(size: ui.Size.fromWidth(300)),
-    //                     'assets/images/markerImage.png',
-    //                   ),
-    //               markerId: MarkerId(
-    //                   '${homescreenProvider.usedItemBrokerInfo[i].id}'),
-    //               onTap: () {
-    //                 if (PrefUtils.sharedPreferences!.getBool('isConnectiong') ==
-    //                     true) {
-    //                   ProgressDialogUtils.showSnackBar(
-    //                       context: context,
-    //                       message:
-    //                           "You have requested already. Please wait for the response or cancel the request");
-    //                 } else {
-    //                   setState(() {
-    //                     fullname =
-    //                         homescreenProvider.usedItemBrokerInfo[i].fullName ??
-    //                             "";
-    //                     rate =
-    //                         homescreenProvider.usedItemBrokerInfo[i].rate ?? 0;
-    //                     hasCar =
-    //                         homescreenProvider.usedItemBrokerInfo[i].hasCar ??
-    //                             false;
-    //                     selectedbrokerId = homescreenProvider
-    //                         .usedItemBrokerInfo[i].id
-    //                         .toString();
-    //                     phoneNumber =
-    //                         homescreenProvider.usedItemBrokerInfo[i].phone ??
-    //                             "";
-    //                     isBrokerSelected = true;
-    //                   });
-    //                 }
-    //               },
-    //               infoWindow: InfoWindow(
-    //                 title:
-    //                     '${homescreenProvider.usedItemBrokerInfo[i].fullName}',
-    //               ),
-    //             ),
-    //           );
-    //         }
-    //         ProgressDialogUtils.hideProgressDialog();
-    //         PrefUtils.sharedPreferences!.setBool('isSearching', true);
-    //         PrefUtils.sharedPreferences!.remove('description');
-    //         PrefUtils.sharedPreferences!.setString('description',
-    //             'There are ${homescreenProvider.usedItemBrokerInfo.length} Brokers available around $placeName');
-    //         if (!mounted) return;
-    //         setState(() {});
-    //       } else {
-    //         ProgressDialogUtils.hideProgressDialog();
-    //         PrefUtils.sharedPreferences!.setBool('isSearching', true);
-    //         PrefUtils.sharedPreferences!.remove('description');
-    //         PrefUtils.sharedPreferences!.setString('description',
-    //             'There are no brokers available around $placeName. Please search another place!');
-    //         if (!mounted) return;
-    //         setState(() {});
-    //       }
-    //     }
-    //     break;
-    //   default:
-    // }
   }
 
   @override
@@ -1089,14 +599,16 @@ class PlacePickerState extends State<PlacePicker> {
   @override
   void initState() {
     super.initState();
-    PrefUtils().init();
     _requestStreamController =
         StreamController<CheckForCustomerRequestModel>.broadcast();
     homescreenProvider =
         Provider.of<HomescreenProvider>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      initMarker();
-      // setInitialMarkersBasedOnBorkersLocations();
+      await initMarker();
+      setState(() {
+        isConnectiong =
+            PrefUtils.sharedPreferences!.getBool('isConnectiong') == true;
+      });
       getBrokers(latitude: '', longitude: '');
     });
   }
@@ -1156,14 +668,11 @@ class PlacePickerState extends State<PlacePicker> {
               Column(
                 children: <Widget>[
                   Expanded(
-                    child: PrefUtils.sharedPreferences!
-                                .getBool('isConnectiong') ==
-                            true
+                    child: isConnectiong
                         ? GoogleMap(
                             initialCameraPosition: CameraPosition(
                               target: initialTarget,
                               zoom: 15,
-                              // bearing: 15,
                             ),
                             myLocationButtonEnabled: true,
                             myLocationEnabled: true,
@@ -1180,7 +689,6 @@ class PlacePickerState extends State<PlacePicker> {
                             initialCameraPosition: CameraPosition(
                               target: initialTarget,
                               zoom: 15,
-                              // bearing: 50,
                             ),
                             myLocationButtonEnabled:
                                 false, // Optionally enable my location button
@@ -1193,8 +701,7 @@ class PlacePickerState extends State<PlacePicker> {
                             markers: Set<Marker>.of(marker),
                           ),
                   ),
-                  if (PrefUtils.sharedPreferences!.getBool('isConnectiong') ==
-                      false) ...[
+                  if (isConnectiong == false) ...[
                     hasSearchTerm
                         ? const SizedBox()
                         : isBrokerSelected

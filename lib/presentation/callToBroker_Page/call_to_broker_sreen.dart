@@ -455,7 +455,8 @@ class _AllBrokerInfoState extends State<AllBrokerInfo> {
                         PrefUtils.sharedPreferences!
                             .setBool('isLoggedIn', false);
                         NavigatorService.pushNamedAndRemoveUntil(
-                            AppRoutes.loginscreenScreen);
+                          AppRoutes.loginscreenScreen,
+                        );
                         break;
                       default:
                     }

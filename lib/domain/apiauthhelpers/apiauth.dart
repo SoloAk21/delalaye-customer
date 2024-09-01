@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:delalochu/data/models/servicesModel/getServicesList.dart';
 import 'package:delalochu/presentation/homescreen_screen/models/CarRantSviceBroker.dart';
@@ -21,8 +22,8 @@ import '../../presentation/homescreen_screen/models/connectionhistoryModel.dart'
 import '../../presentation/homescreen_screen/models/houseRantserviceBroker.dart';
 
 class ApiAuthHelper {
-  static var prodomain = "https://api.delalaye.com";
-  static var devdomain = "https://dev-api.delalaye.com";
+  static var devdomain = "https://api.delalaye.com";
+  static var prodomain = "https://dev-api.delalaye.com";
 
   static Future<bool> updateProfile(
       {username, phoneNumber, password, image, isnopasandimage}) async {
@@ -308,6 +309,46 @@ class ApiAuthHelper {
     return false;
   }
 
+  static Future<bool> directCalltobroker({
+    brokerId,
+    serviceId,
+    locationName,
+    locationLatitude,
+    locationLongtude,
+  }) async {
+    try {
+      var token = PrefUtils.sharedPreferences!.getString('token') ?? '';
+      print(' token ==> $token');
+      var headers = {'Content-Type': 'application/json', 'x-auth-token': token};
+      var request = http.Request(
+          'POST', Uri.parse('$prodomain/api/users/call-broker-directly'));
+      print(
+          '$brokerId, $serviceId, $locationLatitude, $locationLongtude $locationName');
+      request.body = json.encode({
+        "brokerId": "$brokerId",
+        "serviceId": "$serviceId",
+        "locationName": "$locationName",
+        "locationLatitude": "$locationLatitude",
+        "locationLongtude": "$locationLongtude",
+      });
+      request.headers.addAll(headers);
+
+      http.StreamedResponse response = await request.send();
+
+      if (response.statusCode == 200) {
+        print(await response.stream.bytesToString());
+        return true;
+      } else {
+        print(response.reasonPhrase);
+        print(response.statusCode);
+        return false;
+      }
+    } catch (e, s) {
+      debugPrint('updateStatus Error: $e StackTres => $s');
+      return false;
+    }
+  }
+
   static Future<bool> changePassword({newpassword}) async {
     try {
       var userId = PrefUtils.sharedPreferences!.getInt('userId') ?? '';
@@ -366,7 +407,10 @@ class ApiAuthHelper {
       }
     } catch (e, s) {
       debugPrint('requestForResetePassword Error: $e StackTres => $s');
-      return 'false';
+      if (e is SocketException) {
+        return 'No internet connection, please try again!';
+      }
+      return 'Something went wrong, please try again';
     }
   }
 
@@ -405,6 +449,9 @@ class ApiAuthHelper {
         return '${response.reasonPhrase}';
       }
     } catch (e, s) {
+      if (e is SocketException) {
+        return 'No internet connection, please try again!';
+      }
       debugPrint('Error ==> $e  StackTrace => $s');
       return '$e';
     }
@@ -443,6 +490,9 @@ class ApiAuthHelper {
         return response.reasonPhrase.toString();
       }
     } catch (e, s) {
+      if (e is SocketException) {
+        return 'No internet connection, please try again!';
+      }
       debugPrint('Error ==> $e  StackTrace => $s');
       return '$e';
     }
@@ -517,6 +567,9 @@ class ApiAuthHelper {
       }
     } catch (e, s) {
       debugPrint('Error ==> $e  StackTrace => $s');
+      if (e is SocketException) {
+        return 'No internet connection, please try again!';
+      }
       return '$e';
     }
   }

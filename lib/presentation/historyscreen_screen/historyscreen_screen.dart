@@ -81,7 +81,7 @@ class HistoryscreenScreenState extends State<HistoryscreenScreen> {
           if (provider.connectionData.length == 0) {
             return Center(
               child: Text(
-                'History is not available',
+                'No history',
                 style: TextStyle(
                   color: appTheme.blueGray400,
                   fontSize: 20.fSize,
