@@ -22,8 +22,8 @@ import '../../presentation/homescreen_screen/models/connectionhistoryModel.dart'
 import '../../presentation/homescreen_screen/models/houseRantserviceBroker.dart';
 
 class ApiAuthHelper {
-  static var devdomain = "https://api.delalaye.com";
-  static var prodomain = "https://dev-api.delalaye.com";
+  static var prodomain = "https://api.delalaye.com";
+  static var devdomain = "https://dev-api.delalaye.com";
 
   static Future<bool> updateProfile(
       {username, phoneNumber, password, image, isnopasandimage}) async {
