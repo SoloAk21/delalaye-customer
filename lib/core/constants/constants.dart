@@ -6,7 +6,7 @@ class ConstantStrings {
   static const connectionError = 'Connectivity Issue';
   // static const googleApiKey = 'AIzaSyBuTT7J-KaioMNSmy1hQrQIH19BuoOYSlU'; // Google API key from Ashewa
   static const googleApiKey =
-      'AIzaSyB2rD5Cn6uOQvK40HBodTYwJi5OCx51aOE'; // google Map API key from Delalaye
+      'AIzaSyCyu1cgM9YBLtoP_Wj14xOEINucShgpUyI'; //new google Map API key from Delalaye
   // static const googleApiKey =
   //     'AIzaSyCGPY_hsHcarYRmtuyvZCTOyoRWGN7-JGA'; // google Map API key from Kalid
   static String termsandCondition = """{
