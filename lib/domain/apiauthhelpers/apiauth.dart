@@ -22,8 +22,8 @@ import '../../presentation/homescreen_screen/models/connectionhistoryModel.dart'
 import '../../presentation/homescreen_screen/models/houseRantserviceBroker.dart';
 
 class ApiAuthHelper {
-  static var prodomain = "https://api.delalaye.com";
-  static var devdomain = "https://dev-api.delalaye.com";
+  // static String baseURL = "https://api.delalaye.com";
+  static String baseURL = "https://dev-api.delalaye.com";
 
   static Future<bool> updateProfile(
       {username, phoneNumber, password, image, isnopasandimage}) async {
@@ -32,8 +32,8 @@ class ApiAuthHelper {
       var token = PrefUtils.sharedPreferences!.getString('token') ?? '';
       var userId = PrefUtils.sharedPreferences!.getInt('userId') ?? '';
       var headers = {'x-auth-token': token, 'Content-Type': 'application/json'};
-      var request = http.Request(
-          'PUT', Uri.parse('$prodomain/api/users/profile/$userId'));
+      var request =
+          http.Request('PUT', Uri.parse('$baseURL/api/users/profile/$userId'));
       if (isnopasandimage) {
         debugPrint('is no pass and iamge');
         request.body =
@@ -86,7 +86,7 @@ class ApiAuthHelper {
       var token = PrefUtils.sharedPreferences!.getString('token') ?? '';
       var headers = {'Content-Type': 'application/json', 'x-auth-token': token};
       var request = http.Request(
-          'PUT', Uri.parse('$prodomain/api/users/rate-broker/$brokerId'));
+          'PUT', Uri.parse('$baseURL/api/users/rate-broker/$brokerId'));
       request.body = json.encode({"rating": rateValue, "comment": comment});
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
@@ -107,7 +107,7 @@ class ApiAuthHelper {
     List<Service> services = [];
     try {
       var request =
-          http.Request('GET', Uri.parse('$prodomain/api/broker/services'));
+          http.Request('GET', Uri.parse('$baseURL/api/broker/services'));
 
       http.StreamedResponse response = await request.send();
 
@@ -134,7 +134,7 @@ class ApiAuthHelper {
       var token = PrefUtils.sharedPreferences!.getString('token') ?? '';
       var headers = {'x-auth-token': token};
       var request = http.Request(
-          'GET', Uri.parse('$prodomain/api/users/request/$connectionId'));
+          'GET', Uri.parse('$baseURL/api/users/request/$connectionId'));
 
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
@@ -147,8 +147,7 @@ class ApiAuthHelper {
     } catch (e, s) {
       debugPrint('Error: $e StackTres => $s');
     }
-    debugPrint(
-        '===================> $prodomain/api/users/request/$connectionId');
+    debugPrint('===================> $baseURL/api/users/request/$connectionId');
     yield brokerdata;
   }
 
@@ -160,7 +159,7 @@ class ApiAuthHelper {
       debugPrint('token: ' + token);
       var headers = {'x-auth-token': token};
       var request = http.Request(
-          'GET', Uri.parse('$prodomain/api/users/connection/history'));
+          'GET', Uri.parse('$baseURL/api/users/connection/history'));
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
       if (response.statusCode == 200) {
@@ -185,7 +184,7 @@ class ApiAuthHelper {
       var token = PrefUtils.sharedPreferences!.getString('token') ?? '';
       var headers = {'x-auth-token': token};
       var request = http.Request(
-          'GET', Uri.parse('$prodomain/api/users/request/$connectionId'));
+          'GET', Uri.parse('$baseURL/api/users/request/$connectionId'));
 
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
@@ -198,8 +197,7 @@ class ApiAuthHelper {
     } catch (e, s) {
       debugPrint('Error: $e StackTres => $s');
     }
-    debugPrint(
-        '===================> $prodomain/api/users/request/$connectionId');
+    debugPrint('===================> $baseURL/api/users/request/$connectionId');
     return brokerdata;
   }
 
@@ -209,7 +207,7 @@ class ApiAuthHelper {
       var token = PrefUtils.sharedPreferences!.getString('token') ?? '';
       debugPrint('token =>$token ');
       var headers = {'x-auth-token': token};
-      var request = http.Request('GET', Uri.parse('$prodomain/api/auth/user'));
+      var request = http.Request('GET', Uri.parse('$baseURL/api/auth/user'));
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
       if (response.statusCode == 200) {
@@ -243,8 +241,8 @@ class ApiAuthHelper {
       var token = PrefUtils.sharedPreferences!.getString('token') ?? '';
       debugPrint('token ==> $token');
       var headers = {'Content-Type': 'application/json', 'x-auth-token': token};
-      var request = http.Request(
-          'POST', Uri.parse('$prodomain/api/users/request-broker'));
+      var request =
+          http.Request('POST', Uri.parse('$baseURL/api/users/request-broker'));
       request.body = json.encode({
         "brokerId": usreId,
         "serviceId": serviceId,
@@ -270,7 +268,7 @@ class ApiAuthHelper {
     try {
       var headers = {'Content-Type': 'application/json'};
       var request =
-          http.Request('PUT', Uri.parse('$prodomain/api/users/check-otp'));
+          http.Request('PUT', Uri.parse('$baseURL/api/users/check-otp'));
       request.body = json.encode({"otp": otpCode});
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
@@ -293,8 +291,8 @@ class ApiAuthHelper {
     try {
       var token = PrefUtils.sharedPreferences!.getString('token') ?? '';
       var headers = {'Content-Type': 'application/json', 'x-auth-token': token};
-      var request = http.Request('PUT',
-          Uri.parse('$prodomain/api/users/connection/call/$connectionId'));
+      var request = http.Request(
+          'PUT', Uri.parse('$baseURL/api/users/connection/call/$connectionId'));
       request.body = json.encode({"reason": "1"});
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
@@ -321,7 +319,7 @@ class ApiAuthHelper {
       print(' token ==> $token');
       var headers = {'Content-Type': 'application/json', 'x-auth-token': token};
       var request = http.Request(
-          'POST', Uri.parse('$prodomain/api/users/call-broker-directly'));
+          'POST', Uri.parse('$baseURL/api/users/call-broker-directly'));
       print(
           '$brokerId, $serviceId, $locationLatitude, $locationLongtude $locationName');
       request.body = json.encode({
@@ -352,13 +350,13 @@ class ApiAuthHelper {
   static Future<bool> changePassword({newpassword}) async {
     try {
       var userId = PrefUtils.sharedPreferences!.getInt('userId') ?? '';
-      print('================================================================');
-      print('====UserId: ' + userId.toString());
-      print('================================================================');
+      // print('================================================================');
+      // print('====UserId: ' + userId.toString());
+      // print('================================================================');
       if (userId != '') {
         var headers = {'Content-Type': 'application/json'};
         var request = http.Request(
-            'PUT', Uri.parse('$prodomain/api/users/reset-password/$userId'));
+            'PUT', Uri.parse('$baseURL/api/users/reset-password/$userId'));
         request.body = json.encode({"newPassword": newpassword});
         request.headers.addAll(headers);
         http.StreamedResponse response = await request.send();
@@ -384,8 +382,8 @@ class ApiAuthHelper {
   static Future<String> requestForResetePassword({phonenumber}) async {
     try {
       var headers = {'Content-Type': 'application/json'};
-      var request = http.Request(
-          'PUT', Uri.parse('$prodomain/api/users/forgot-password/'));
+      var request =
+          http.Request('PUT', Uri.parse('$baseURL/api/users/forgot-password/'));
       request.body = json.encode({"phone": phonenumber});
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
@@ -422,7 +420,7 @@ class ApiAuthHelper {
     try {
       var headers = {'Content-Type': 'application/json'};
       var request =
-          http.Request('POST', Uri.parse('$prodomain/api/auth/signup/user'));
+          http.Request('POST', Uri.parse('$baseURL/api/auth/signup/user'));
       request.body = json.encode({
         "fullName": userName,
         "password": password,
@@ -464,7 +462,7 @@ class ApiAuthHelper {
     try {
       var headers = {'Content-Type': 'application/json'};
       var request =
-          http.Request('POST', Uri.parse('$prodomain/api/auth/user/login'));
+          http.Request('POST', Uri.parse('$baseURL/api/auth/user/login'));
       request.body = json.encode({"phone": phoneNumber, "password": password});
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
@@ -506,8 +504,8 @@ class ApiAuthHelper {
       var token = prefs.getString('token') ?? '';
       var userId = prefs.getInt('userId') ?? '';
       var headers = {'x-auth-token': token, 'Content-Type': 'application/json'};
-      var request = http.Request(
-          'POST', Uri.parse('$prodomain/api/broker/topup/$userId'));
+      var request =
+          http.Request('POST', Uri.parse('$baseURL/api/broker/topup/$userId'));
       request.body = json.encode({"amount": amount});
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
@@ -541,7 +539,7 @@ class ApiAuthHelper {
     try {
       var headers = {'Content-Type': 'application/json'};
       var request = http.Request(
-          'POST', Uri.parse('$prodomain/api/auth/user/login/google/'));
+          'POST', Uri.parse('$baseURL/api/auth/user/login/google/'));
       request.body = json.encode({"idToken": "$accessToken"});
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
@@ -576,17 +574,16 @@ class ApiAuthHelper {
 
   static Future<List<BrokerInfo>> fetchBrokerData(
       {latitude, longitude, serviceId}) async {
-    debugPrint(
-        '================================> here is a fetchBrokerData API function');
     var brokerInfo = <BrokerInfo>[];
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       var token = prefs.getString('token') ?? '';
       var headers = {'x-auth-token': token};
+      print('Latitude: $latitude $longitude $serviceId');
       var request = http.Request(
           'GET',
           Uri.parse(
-              '$prodomain/api/broker/filter?serviceId=$serviceId&latitude=$latitude&longitude=$longitude'));
+              '$baseURL/api/broker/filter?serviceId=$serviceId&latitude=$latitude&longitude=$longitude'));
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
       if (response.statusCode == 200) {
@@ -597,8 +594,7 @@ class ApiAuthHelper {
             brokerInfo.add(BrokerInfo.fromJson(item));
           }
         }
-        debugPrint(
-            '================================> here is a fetchBrokerData response.statusCode == 200');
+        debugPrint('Broker======> ${responseData.toString()}');
       } else {
         debugPrint(
             '==========================> $brokerInfo ${response.statusCode} ${response.reasonPhrase}');
@@ -621,7 +617,7 @@ class ApiAuthHelper {
       var request = http.Request(
           'GET',
           Uri.parse(
-              '$prodomain/api/broker/filter?serviceId=$serviceId&latitude=$latitude&longitude=$longitude'));
+              '$baseURL/api/broker/filter?serviceId=$serviceId&latitude=$latitude&longitude=$longitude'));
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
       if (response.statusCode == 200) {
@@ -651,7 +647,7 @@ class ApiAuthHelper {
       var request = http.Request(
           'GET',
           Uri.parse(
-              '$prodomain/api/broker/filter?serviceId=$serviceId&latitude=$latitude&longitude=$longitude'));
+              '$baseURL/api/broker/filter?serviceId=$serviceId&latitude=$latitude&longitude=$longitude'));
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
       if (response.statusCode == 200) {
@@ -681,7 +677,7 @@ class ApiAuthHelper {
       var request = http.Request(
           'GET',
           Uri.parse(
-              '$prodomain/api/broker/filter?serviceId=$serviceId&latitude=$latitude&longitude=$longitude'));
+              '$baseURL/api/broker/filter?serviceId=$serviceId&latitude=$latitude&longitude=$longitude'));
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
       if (response.statusCode == 200) {
@@ -711,7 +707,7 @@ class ApiAuthHelper {
       var request = http.Request(
           'GET',
           Uri.parse(
-              '$prodomain/api/broker/filter?serviceId=$serviceId&latitude=$latitude&longitude=$longitude'));
+              '$baseURL/api/broker/filter?serviceId=$serviceId&latitude=$latitude&longitude=$longitude'));
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
       if (response.statusCode == 200) {
@@ -741,7 +737,7 @@ class ApiAuthHelper {
       var request = http.Request(
           'GET',
           Uri.parse(
-              '$prodomain/api/broker/filter?serviceId=$serviceId&latitude=$latitude&longitude=$longitude'));
+              '$baseURL/api/broker/filter?serviceId=$serviceId&latitude=$latitude&longitude=$longitude'));
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
       if (response.statusCode == 200) {
@@ -771,7 +767,7 @@ class ApiAuthHelper {
       var request = http.Request(
           'GET',
           Uri.parse(
-              '$prodomain/api/broker/filter?serviceId=$serviceId&latitude=$latitude&longitude=$longitude'));
+              '$baseURL/api/broker/filter?serviceId=$serviceId&latitude=$latitude&longitude=$longitude'));
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
       if (response.statusCode == 200) {
@@ -795,7 +791,7 @@ class ApiAuthHelper {
       var token = PrefUtils.sharedPreferences!.getString('token') ?? '';
       var headers = {'Content-Type': 'application/json', 'x-auth-token': token};
       var request = http.Request('PUT',
-          Uri.parse('$prodomain/api/users/connection/cancel/$cennectionId'));
+          Uri.parse('$baseURL/api/users/connection/cancel/$cennectionId'));
       request.body = json.encode({"reason": reason});
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
@@ -804,7 +800,7 @@ class ApiAuthHelper {
         return true;
       } else {
         debugPrint(
-            'Request for cancel is not done => $prodomain/api/users/connection/cancel/$cennectionId');
+            'Request for cancel is not done => $baseURL/api/users/connection/cancel/$cennectionId');
         return false;
       }
     } catch (e, s) {

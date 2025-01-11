@@ -239,7 +239,7 @@ class PlacePickerState extends State<PlacePicker> {
       var request = http.Request(
           'GET',
           Uri.parse(
-              '${ApiAuthHelper.prodomain}/api/users/request/$connectionId'));
+              '${ApiAuthHelper.baseURL}/api/users/request/$connectionId'));
       request.headers.addAll(headers);
       http.StreamedResponse response = await request.send();
       if (response.statusCode == 200) {
@@ -317,7 +317,7 @@ class PlacePickerState extends State<PlacePicker> {
       isConnectiong = false;
       isBrokerSelected = false;
     });
-    getCurrentLocation().then((locationData) async {
+    await getCurrentLocation().then((locationData) async {
       ProgressDialogUtils.showProgressDialog(
         context: context,
         isCancellable: false,
@@ -342,8 +342,14 @@ class PlacePickerState extends State<PlacePicker> {
           marker.add(
             Marker(
               position: LatLng(
-                listofbrokers[i].locationLatitude ?? 0.0,
-                listofbrokers[i].locationLongtude ?? 0.0,
+                (listofbrokers[i].addresses != null &&
+                        listofbrokers[i].addresses!.isNotEmpty)
+                    ? listofbrokers[i].addresses![0].latitude ?? 0.0
+                    : 0.0,
+                (listofbrokers[i].addresses != null &&
+                        listofbrokers[i].addresses!.isNotEmpty)
+                    ? listofbrokers[i].addresses![0].longitude ?? 0.0
+                    : 0.0,
               ),
               icon: brokerIcon ??
                   await BitmapDescriptor.fromAssetImage(
@@ -361,7 +367,7 @@ class PlacePickerState extends State<PlacePicker> {
                 } else {
                   setState(() {
                     fullname = listofbrokers[i].fullName ?? "";
-                    rate = listofbrokers[i].rate ?? 0;
+                    rate = listofbrokers[i].averageRating ?? 0;
                     hasCar = listofbrokers[i].hasCar ?? false;
                     selectedbrokerId = listofbrokers[i].id.toString();
                     phoneNumber = listofbrokers[i].phone ?? "";
@@ -371,7 +377,7 @@ class PlacePickerState extends State<PlacePicker> {
               },
               infoWindow: InfoWindow(
                 title:
-                    '${listofbrokers[i].fullName ?? ""} ${listofbrokers[i].phone ?? ""}',
+                    'Call Me: ${listofbrokers[i].fullName ?? ""} ${listofbrokers[i].phone ?? ""}',
                 onTap: () async {
                   if (listofbrokers[i].phone != null) {
                     ProgressDialogUtils.showProgressDialog(
@@ -605,11 +611,12 @@ class PlacePickerState extends State<PlacePicker> {
         Provider.of<HomescreenProvider>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await initMarker();
-      setState(() {
-        isConnectiong =
-            PrefUtils.sharedPreferences!.getBool('isConnectiong') == true;
-      });
-      getBrokers(latitude: '', longitude: '');
+      PrefUtils.sharedPreferences!
+          .setString('description', 'lbl_please_tap_on_the_nearest_delala'.tr);
+      isConnectiong =
+          PrefUtils.sharedPreferences!.getBool('isConnectiong') == true;
+      await getBrokers(latitude: '', longitude: '');
+      setState(() {});
     });
   }
 
