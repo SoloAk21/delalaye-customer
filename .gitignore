@@ -6,3 +6,6 @@
 /.flutter-plugins-dependencies
 /.packages
 /pubspec.lock
+
+# FVM Version Cache
+.fvm/
