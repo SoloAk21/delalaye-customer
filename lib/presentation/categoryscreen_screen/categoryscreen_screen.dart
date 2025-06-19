@@ -205,7 +205,7 @@ class CategoryscreenScreenState extends State<CategoryscreenScreen> {
                 text: "lbl_continue".tr,
                 buttonStyle: CustomButtonStyles.none,
                 decoration: CustomButtonStyles
-                    .gradientOnPrimaryContainerToOrangeDecoration)));
+                    .gradientOnPrimaryContainerToPrimaryDecoration)));
   }
 
   /// Navigates to the selectcategoryscreenScreen when the action is triggered.

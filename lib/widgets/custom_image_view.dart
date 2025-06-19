@@ -5,6 +5,8 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
+import '../theme/provider/theme_provider.dart';
 
 class CustomImageView extends StatelessWidget {
   ///[imagePath] is required parameter for showing image
@@ -39,68 +41,78 @@ class CustomImageView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final logo = themeProvider.isDarkMode
+        ? themeProvider.branding?.logoDark
+        : themeProvider.branding?.logoLight;
+
+    // Use the theme logo if available, otherwise fall back to the provided imagePath
+    final effectiveImagePath = logo ?? imagePath;
+
     return alignment != null
         ? Align(
             alignment: alignment!,
-            child: _buildWidget(),
+            child: _buildWidget(effectiveImagePath),
           )
-        : _buildWidget();
+        : _buildWidget(effectiveImagePath);
   }
 
-  Widget _buildWidget() {
+  Widget _buildWidget(String? effectiveImagePath) {
     return Padding(
       padding: margin ?? EdgeInsets.zero,
       child: InkWell(
         onTap: onTap,
-        child: _buildCircleImage(),
+        child: _buildCircleImage(effectiveImagePath),
       ),
     );
   }
 
   ///build the image with border radius
-  _buildCircleImage() {
+  _buildCircleImage(String? effectiveImagePath) {
     if (radius != null) {
       return ClipRRect(
         borderRadius: radius ?? BorderRadius.zero,
-        child: _buildImageWithBorder(),
+        child: _buildImageWithBorder(effectiveImagePath),
       );
     } else {
-      return _buildImageWithBorder();
+      return _buildImageWithBorder(effectiveImagePath);
     }
   }
 
   ///build the image with border and border radius style
-  _buildImageWithBorder() {
+  _buildImageWithBorder(String? effectiveImagePath) {
     if (border != null) {
       return Container(
         decoration: BoxDecoration(
           border: border,
           borderRadius: radius,
         ),
-        child: _buildImageView(),
+        child: _buildImageView(effectiveImagePath),
       );
     } else {
-      return _buildImageView();
+      return _buildImageView(effectiveImagePath);
     }
   }
 
-  Widget _buildImageView() {
-    if (imagePath != null) {
-      switch (imagePath!.imageType) {
+  Widget _buildImageView(String? effectiveImagePath) {
+    if (effectiveImagePath != null) {
+      switch (effectiveImagePath.imageType) {
         case ImageType.svg:
           return Container(
             height: height,
             width: width,
-            child: SvgPicture.asset(imagePath!,
-                height: height,
-                width: width,
-                fit: fit ?? BoxFit.contain,
-                colorFilter:
-                    ColorFilter.mode(color ?? Colors.black, BlendMode.srcIn)),
+            child: SvgPicture.asset(
+              effectiveImagePath,
+              height: height,
+              width: width,
+              fit: fit ?? BoxFit.contain,
+              colorFilter:
+                  ColorFilter.mode(color ?? Colors.black, BlendMode.srcIn),
+            ),
           );
         case ImageType.file:
           return Image.file(
-            File(imagePath!),
+            File(effectiveImagePath),
             height: height,
             width: width,
             fit: fit ?? BoxFit.cover,
@@ -111,7 +123,7 @@ class CustomImageView extends StatelessWidget {
             height: height,
             width: width,
             fit: fit,
-            imageUrl: imagePath!,
+            imageUrl: effectiveImagePath,
             color: color,
             placeholder: (context, url) => Container(
               height: 30,
@@ -131,7 +143,7 @@ class CustomImageView extends StatelessWidget {
         case ImageType.png:
         default:
           return Image.asset(
-            imagePath!,
+            effectiveImagePath,
             height: height,
             width: width,
             fit: fit ?? BoxFit.cover,
@@ -139,7 +151,12 @@ class CustomImageView extends StatelessWidget {
           );
       }
     }
-    return SizedBox();
+    return Image.asset(
+      placeHolder,
+      height: height,
+      width: width,
+      fit: fit ?? BoxFit.cover,
+    );
   }
 }
 

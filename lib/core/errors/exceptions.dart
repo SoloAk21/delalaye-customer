@@ -7,6 +7,11 @@ class CacheException implements Exception {}
 
 class NetworkException implements Exception {}
 
+class BrandingException implements Exception {
+  final String message;
+  BrandingException(this.message);
+}
+
 ///can be used for throwing [NoInternetException]
 class NoInternetException implements Exception {
   late String _message;

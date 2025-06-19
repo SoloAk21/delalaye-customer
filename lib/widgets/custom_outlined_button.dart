@@ -53,7 +53,7 @@ class CustomOutlinedButton extends BaseButton {
         width: this.width ?? double.maxFinite,
         margin: margin,
         decoration: decoration ??
-            CustomButtonStyles.gradientOnPrimaryContainerToOrangeDecoration,
+            CustomButtonStyles.gradientOnPrimaryContainerToPrimaryDecoration,
         child: OutlinedButton(
           style: buttonStyle,
           onPressed: isDisabled ?? false ? null : onPressed ?? () {},

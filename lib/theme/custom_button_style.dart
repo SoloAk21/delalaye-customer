@@ -18,7 +18,7 @@ class CustomButtonStyles {
       );
 
   // Gradient button style
-  static BoxDecoration get gradientOnPrimaryContainerToOrangeDecoration =>
+  static BoxDecoration get gradientOnPrimaryContainerToPrimaryDecoration =>
       BoxDecoration(
         borderRadius: BorderRadius.circular(8.h),
         gradient: LinearGradient(
@@ -26,11 +26,12 @@ class CustomButtonStyles {
           end: Alignment(1.0, 0),
           colors: [
             theme.colorScheme.onPrimaryContainer,
-            appTheme.orange800,
+            theme.colorScheme.primary,
           ],
         ),
       );
-  static BoxDecoration get gradientOnPrimaryContainerToOrangeTL8Decoration =>
+
+  static BoxDecoration get gradientOnPrimaryContainerToPrimaryTL8Decoration =>
       BoxDecoration(
         borderRadius: BorderRadius.circular(8.h),
         gradient: LinearGradient(
@@ -38,7 +39,7 @@ class CustomButtonStyles {
           end: Alignment(1.0, 0),
           colors: [
             theme.colorScheme.onPrimaryContainer,
-            appTheme.orange800,
+            theme.colorScheme.primary,
           ],
         ),
       );
@@ -68,7 +69,8 @@ class CustomButtonStyles {
           borderRadius: BorderRadius.circular(5.h),
         ),
       );
-  // text button style
+
+  // Text button style
   static ButtonStyle get none => ButtonStyle(
         backgroundColor: MaterialStateProperty.all<Color>(Colors.transparent),
         elevation: MaterialStateProperty.all<double>(0),

@@ -54,44 +54,15 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  late HomescreenProvider homescreenProvider;
-  Future<LocationData> getCurrentLocation() async {
-    Location location = Location();
-    return await location.getLocation();
-  }
-
-  getBrokerListBasedOnTheirServiceAndLocation() async {
-    getCurrentLocation().then((locationData) async {
-      for (var i = 1; i < 4; i++) {
-        debugPrint(
-            'Info - $i: ${locationData.latitude}, ${locationData.longitude}');
-        await homescreenProvider.fetchBrokerList(
-          latitude: locationData.latitude ?? 0.0,
-          longitude: locationData.longitude ?? 0.0,
-          serviceId: i,
-        );
-      }
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    homescreenProvider =
-        Provider.of<HomescreenProvider>(context, listen: false);
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // getBrokerListBasedOnTheirServiceAndLocation();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Sizer(
       builder: (context, orientation, deviceType) {
         return Consumer2<ThemeProvider, LanguageProvider>(
-          builder: (context, provider, languageProvider, child) {
+          builder: (context, themeProvider, languageProvider, child) {
             return MaterialApp(
-              theme: theme,
+              theme:
+                  ThemeHelper().themeDataDynamic(context), // Use dynamic theme
               title: 'delalochu',
               navigatorKey: NavigatorService.navigatorKey,
               debugShowCheckedModeBanner: false,

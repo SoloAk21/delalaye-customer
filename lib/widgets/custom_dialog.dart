@@ -110,9 +110,8 @@ StatefulBuilder _buildChild(
                   height: 60.77,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
-                    color: selectedReasonIndex == i
-                        ? color
-                        : Colors.transparent,
+                    color:
+                        selectedReasonIndex == i ? color : Colors.transparent,
                     border: Border.all(
                       color: Colors.grey,
                       width: 1,
@@ -135,9 +134,7 @@ StatefulBuilder _buildChild(
                         style: TextStyle(
                           fontWeight: FontWeight.w500,
                           fontFamily: 'poppins',
-                          color: selectedReasonIndex == i
-                              ? Colors.black
-                              : null,
+                          color: selectedReasonIndex == i ? Colors.black : null,
                           fontSize: 18,
                         ),
                       ),

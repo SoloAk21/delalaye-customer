@@ -203,7 +203,7 @@ class SelectcategoryscreenScreenState
                 text: "lbl_continue".tr,
                 buttonStyle: CustomButtonStyles.none,
                 decoration: CustomButtonStyles
-                    .gradientOnPrimaryContainerToOrangeDecoration,
+                    .gradientOnPrimaryContainerToPrimaryDecoration,
                 onPressed: () {
                   onTapContinueButton(context);
                 })));

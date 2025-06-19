@@ -20,10 +20,27 @@ import '../../core/utils/pref_utils.dart';
 import '../../presentation/homescreen_screen/models/HouseMaidSviceBroker.dart';
 import '../../presentation/homescreen_screen/models/connectionhistoryModel.dart';
 import '../../presentation/homescreen_screen/models/houseRantserviceBroker.dart';
+import 'package:delalochu/data/models/brandingModel/branding_model.dart';
 
 class ApiAuthHelper {
-  static String baseURL = "https://api.delalaye.com";
-  // static String baseURL = "https://dev-api.delalaye.com";
+  // static String baseURL = "https://api.delalaye.com";
+  static String baseURL = "https://dev-api.delalaye.com";
+  static const String _baseUrl = 'http://192.168.1.45:5000/api';
+  static Future<Branding> getBranding() async {
+    try {
+      final response = await http.get(Uri.parse('$_baseUrl/branding'));
+      printLog('Branding response status: ${response.statusCode}');
+      printLog('Branding response body: ${response.body}');
+      if (response.statusCode == 200) {
+        printLog('Branding response: ${response.body}');
+        return Branding.fromJson(jsonDecode(response.body));
+      } else {
+        throw Exception('Failed to load branding: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Network error: $e');
+    }
+  }
 
   static Future<bool> updateProfile(
       {username, phoneNumber, password, image, isnopasandimage}) async {
@@ -579,7 +596,7 @@ class ApiAuthHelper {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       var token = prefs.getString('token') ?? '';
       var headers = {'x-auth-token': token};
-      print('Latitude: $latitude $longitude $serviceId');
+      print('Latitude: $latitude $longitude $serviceId and token $token');
       var request = http.Request(
           'GET',
           Uri.parse(

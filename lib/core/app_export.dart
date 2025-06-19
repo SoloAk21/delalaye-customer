@@ -2,6 +2,7 @@ export 'package:connectivity_plus/connectivity_plus.dart';
 export 'package:delalochu/core/constants/constants.dart';
 export 'package:delalochu/core/errors/exceptions.dart';
 export 'package:delalochu/core/network/network_info.dart';
+export 'package:delalochu/core/network/branding_api_service.dart';
 export 'package:delalochu/core/utils/image_constant.dart';
 export 'package:delalochu/core/utils/logger.dart';
 export 'package:delalochu/core/utils/navigator_service.dart';
